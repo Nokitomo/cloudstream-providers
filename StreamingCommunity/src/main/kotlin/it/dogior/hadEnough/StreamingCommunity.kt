@@ -553,8 +553,12 @@ class StreamingCommunity(
         if (data.isEmpty()) return false
         val loadData = parseJson<LoadData>(data)
 
-        val response = app.get(loadData.url).document
-        val iframeSrc = response.select("iframe").attr("src")
+        val responseBody = app.get(loadData.url).body.string()
+        val iframeSrc = StreamingCommunityEmbedResolver.resolveIframeUrl(responseBody, loadData.url)
+            ?: StreamingCommunityEmbedResolver.resolveEmbedUrl(responseBody, loadData.url)?.let { embedUrl ->
+                StreamingCommunityEmbedResolver.resolveIframeUrl(app.get(embedUrl).body.string(), embedUrl)
+            }
+            ?: return false
 
         VixCloudExtractor().getUrl(
             url = iframeSrc,

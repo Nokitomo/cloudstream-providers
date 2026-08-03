@@ -89,6 +89,7 @@ import it.dogior.hadEnough.model.*
 import it.dogior.hadEnough.extractor.*
 import it.dogior.hadEnough.iptv.StreamCenterIptv
 import it.dogior.hadEnough.serie_movie.StreamingCommunityClient
+import it.dogior.hadEnough.serie_movie.StreamingCommunityEmbedResolver
 import it.dogior.hadEnough.stremio.*
 import it.dogior.hadEnough.torrent.*
 import it.dogior.hadEnough.tracking.*
@@ -7280,15 +7281,12 @@ class StreamCenter internal constructor(
         callback: (ExtractorLink) -> Unit,
     ): Boolean {
         val iframeSrc = runCatching {
-            val html = fetchText {
-                app.get(
-                    playbackData.iframeUrl,
-                ).body.string()
-            }
-            Jsoup.parse(html, playbackData.iframeUrl)
-                .selectFirst("iframe")
-                ?.attr("src")
-                ?.takeIf(String::isNotBlank)
+            val html = fetchText { app.get(playbackData.iframeUrl).body.string() }
+            StreamingCommunityEmbedResolver.resolveIframeUrl(html, playbackData.iframeUrl)
+                ?: StreamingCommunityEmbedResolver.resolveEmbedUrl(html, playbackData.iframeUrl)?.let { embedUrl ->
+                    val embedHtml = fetchText { app.get(embedUrl).body.string() }
+                    StreamingCommunityEmbedResolver.resolveIframeUrl(embedHtml, embedUrl)
+                }
         }.getOrNull()
         if (iframeSrc.isNullOrBlank()) return false
 
