@@ -356,7 +356,21 @@ class StreamingCommunity(
 
         val props = parseJson<InertiaResponse>(responseBody).props
         val title = props.title!!
-        val comingSoon = StreamingCommunityAvailabilityResolver.isUpcoming(title.status, title.releaseDate)
+        val initialComingSoon = StreamingCommunityAvailabilityResolver.isUpcoming(title.status, title.releaseDate)
+        val hasPlayableMovie = if (
+            title.type == "movie" &&
+            initialComingSoon &&
+            StreamingCommunityAvailabilityResolver.shouldProbeInconsistent(title.status, title.releaseDate)
+        ) {
+            probeMovieAvailability(title.id)
+        } else {
+            false
+        }
+        val comingSoon = StreamingCommunityAvailabilityResolver.shouldKeepUpcoming(
+            title.status,
+            title.releaseDate,
+            hasPlayableMovie,
+        )
         val genres = title.genres.map { it.name.capitalize() }
         val year = title.releaseDate?.substringBefore('-')?.toIntOrNull()
         val related = props.sliders?.getOrNull(0)
@@ -432,6 +446,21 @@ class StreamingCommunity(
             }
             return movie
         }
+    }
+
+    private suspend fun probeMovieAvailability(titleId: Int): Boolean {
+        return runCatching {
+            val watchHtml = app.get("${siteRootUrl}${lang}/watch/$titleId", headers = headers).body.string()
+            val watchDocument = org.jsoup.Jsoup.parse(watchHtml)
+            val rawIframe = watchDocument.selectFirst("iframe[src]")?.attr("src")
+                ?: Regex("https?://[^\"'\\s]+vixcloud\\.co/(?:embed|playlist)/\\d+[^\"'\\s]*", RegexOption.IGNORE_CASE)
+                    .find(watchHtml)?.value
+                ?: return@runCatching false
+            val iframeUrl = if (rawIframe.startsWith("http")) rawIframe else "$siteRootUrl${rawIframe.trimStart('/')}"
+            val iframeHtml = app.get(iframeUrl, headers = headers).body.string()
+            Regex("https?://[^\"'\\s]+vixcloud\\.co/(?:embed|playlist)/\\d+[^\"'\\s]*", RegexOption.IGNORE_CASE)
+                .containsMatchIn(iframeHtml)
+        }.getOrDefault(false)
     }
 
     private fun getActualUrl(url: String) =

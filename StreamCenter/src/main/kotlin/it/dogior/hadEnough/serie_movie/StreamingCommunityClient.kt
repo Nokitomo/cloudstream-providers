@@ -12,6 +12,7 @@ import it.dogior.hadEnough.util.cleanText
 import it.dogior.hadEnough.util.optNullableInt
 import it.dogior.hadEnough.util.optNullableString
 import it.dogior.hadEnough.util.StreamCenterLogger
+import it.dogior.hadEnough.util.StreamingCommunityAvailabilityResolver
 import org.jsoup.Jsoup
 import org.jsoup.parser.Parser
 import org.json.JSONArray
@@ -218,6 +219,28 @@ internal class StreamingCommunityClient(
             tmdbId = title.tmdbId,
             imdbId = title.imdbId,
         )
+    }
+
+    suspend fun probeMovieAvailability(title: StreamingCommunityTitle): Boolean {
+        if (!StreamingCommunityAvailabilityResolver.shouldProbeInconsistent(title.status, title.releaseDate)) {
+            return false
+        }
+        return runCatching {
+            ensureHeaders()
+            val watchHtml = app.get("${mainUrl()}/watch/${title.id}", headers = sessionHeaders).body.string()
+            val props = extractPageJson(watchHtml)?.let(::JSONObject)
+                ?.optJSONObject("props")
+            val embedFromProps = props?.optString("embedUrl").orEmpty()
+            val rawIframe = embedFromProps.takeIf(String::isNotBlank)
+                ?: Jsoup.parse(watchHtml).selectFirst("iframe[src]")?.attr("src").orEmpty()
+            if (rawIframe.isBlank()) return@runCatching false
+            val iframeUrl = if (rawIframe.startsWith("http")) rawIframe else "${mainUrl().substringBefore("/it")}${rawIframe}"
+            val iframeHtml = app.get(iframeUrl, headers = sessionHeaders).body.string()
+            Regex("https?://[^\"'\\s]+vixcloud\\.co/(?:embed|playlist)/\\d+[^\"'\\s]*", RegexOption.IGNORE_CASE)
+                .containsMatchIn(iframeHtml)
+        }.onFailure {
+            warning("Probe disponibilita film non riuscito", mapOf("identificativo_titolo" to title.id), it)
+        }.getOrDefault(false)
     }
 
     fun imageUrl(filename: String?): String? {

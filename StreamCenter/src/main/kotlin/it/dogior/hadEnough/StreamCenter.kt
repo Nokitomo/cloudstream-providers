@@ -6548,6 +6548,16 @@ class StreamCenter internal constructor(
                 if (!performanceMode) addScore(title.score)
             }
         } else {
+            val hasPlayableMovie = if (StreamingCommunityAvailabilityResolver.isUpcoming(title.status, title.releaseDate)) {
+                streamingCommunityClient.probeMovieAvailability(title)
+            } else {
+                false
+            }
+            val comingSoon = StreamingCommunityAvailabilityResolver.shouldKeepUpcoming(
+                title.status,
+                title.releaseDate,
+                hasPlayableMovie,
+            )
             val playback = streamingCommunityClient.moviePlayback(title)
             newMovieLoadResponse(
                 title.name,
@@ -6579,7 +6589,7 @@ class StreamCenter internal constructor(
                     showAsTags = catalogDefinition == null && StreamCenterPlugin.shouldShowTrackingIds(sharedPref),
                 )
                 if (!performanceMode) addScore(title.score)
-                this.comingSoon = StreamingCommunityAvailabilityResolver.isUpcoming(title.status, title.releaseDate)
+                this.comingSoon = comingSoon
             }
         }
         val torrentProvenance = torrentPlaybackProvenance(torrentContext)

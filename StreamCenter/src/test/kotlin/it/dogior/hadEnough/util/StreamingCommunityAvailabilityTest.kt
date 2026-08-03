@@ -16,4 +16,10 @@ class StreamingCommunityAvailabilityTest {
         assertTrue(StreamingCommunityAvailabilityResolver.shouldProbeInconsistent("planned", "2020-01-01"))
         assertFalse(StreamingCommunityAvailabilityResolver.shouldProbeInconsistent("ended", "2020-01-01"))
     }
+
+    @Test
+    fun playableSourceClearsUpcomingFlag() {
+        assertFalse(StreamingCommunityAvailabilityResolver.shouldKeepUpcoming("planned", "2020-01-01", true))
+        assertTrue(StreamingCommunityAvailabilityResolver.shouldKeepUpcoming("planned", "2020-01-01", false))
+    }
 }

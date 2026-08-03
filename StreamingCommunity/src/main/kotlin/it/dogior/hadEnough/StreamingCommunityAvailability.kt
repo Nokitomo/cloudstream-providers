@@ -41,5 +41,9 @@ internal object StreamingCommunityAvailabilityResolver {
         return availability.hasDate && !availability.isFuture && normalize(status) !in releasedTokens
     }
 
+    fun shouldKeepUpcoming(status: String?, releaseDate: String?, hasPlayableSource: Boolean): Boolean {
+        return isUpcoming(status, releaseDate) && !hasPlayableSource
+    }
+
     private fun normalize(value: String?): String = value.orEmpty().trim().lowercase(Locale.ROOT).replace(Regex("[^a-z0-9]+"), "")
 }
