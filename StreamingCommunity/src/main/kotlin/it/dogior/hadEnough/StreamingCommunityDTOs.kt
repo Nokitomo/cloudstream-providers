@@ -57,6 +57,7 @@ data class Title(
     @JsonProperty("slug") val slug: String,
     @JsonProperty("type") val type: String,
     @JsonProperty("images") val images: List<PosterImage>,
+    @JsonProperty("translations") val translations: List<TitleTranslation> = emptyList(),
 ) {
     fun getPoster(): String? {
         this.images.forEach {
@@ -68,6 +69,11 @@ data class Title(
     }
 }
 
+data class TitleTranslation(
+    @JsonProperty("key") val key: String,
+    @JsonProperty("locale") val locale: String,
+    @JsonProperty("value") val value: String,
+)
 
 data class PosterImage(
     @JsonProperty("filename") val filename: String,
@@ -164,7 +170,8 @@ data class TitleProp(
     @JsonProperty("seasons") val seasons: List<Season>?,
     @JsonProperty("images") val images: List<PosterImage>,
     @JsonProperty("genres") val genres: List<Genre>,
-    @JsonProperty("main_actors") val mainActors: List<MainActor>?
+    @JsonProperty("main_actors") val mainActors: List<MainActor>?,
+    @JsonProperty("translations") val translations: List<TitleTranslation> = emptyList()
 ){
     fun getBackgroundImageId(): String? {
         this.images.forEach {

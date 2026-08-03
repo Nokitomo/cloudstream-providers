@@ -486,7 +486,7 @@ internal class StreamingCommunityClient(
     private fun JSONObject.toTitle(): StreamingCommunityTitle? {
         val id = optNullableInt("id") ?: return null
         val slug = optNullableString("slug") ?: return null
-        val name = optNullableString("name") ?: return null
+        val name = StreamingCommunityTitleResolver.resolve(this).takeIf(String::isNotBlank) ?: return null
         val type = optNullableString("type") ?: return null
         val seasons = optJSONArray("seasons")?.let { seasonsJson ->
             buildList {

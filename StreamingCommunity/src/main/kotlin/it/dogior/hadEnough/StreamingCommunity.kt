@@ -247,14 +247,15 @@ class StreamingCommunity(
     private fun searchResponseBuilder(listJson: List<Title>): List<SearchResponse> {
         val list: List<SearchResponse> =
             listJson.filter { it.type == "movie" || it.type == "tv" }.map { title ->
+                val resolvedName = StreamingCommunityTitleResolver.resolve(title.name, title.slug, title.translations)
                 val url = "$mainUrl/titles/${title.id}-${title.slug}"
 
                 if (title.type == "tv") {
-                    newTvSeriesSearchResponse(title.name, url) {
+                    newTvSeriesSearchResponse(resolvedName, url) {
                         posterUrl = "$cdnBaseUrl/images/" + title.getPoster()
                     }
                 } else {
-                    newMovieSearchResponse(title.name, url) {
+                    newMovieSearchResponse(resolvedName, url) {
                         posterUrl = "$cdnBaseUrl/images/" + title.getPoster()
                     }
                 }
@@ -376,6 +377,7 @@ class StreamingCommunity(
         val props = parseJson<InertiaResponse>(responseBody).props
         cdnBaseUrl = StreamingCommunityCdnResolver.resolve(props.cdnUrl ?: props.cdnUrlCamel ?: props.cdn, siteRootUrl)
         val title = props.title!!
+        val resolvedTitleName = StreamingCommunityTitleResolver.resolve(title.name, title.slug, title.translations)
         val initialComingSoon = StreamingCommunityAvailabilityResolver.isUpcoming(title.status, title.releaseDate)
         val hasPlayableMovie = if (
             title.type == "movie" &&
@@ -401,7 +403,7 @@ class StreamingCommunity(
             val episodes: List<Episode> = getEpisodes(props)
 
             val tvShow = newTvSeriesLoadResponse(
-                title.name,
+                resolvedTitleName,
                 actualUrl,
                 TvType.TvSeries,
                 episodes
@@ -436,7 +438,7 @@ class StreamingCommunity(
                 title.tmdbId
             )
             val movie = newMovieLoadResponse(
-                title.name,
+                resolvedTitleName,
                 actualUrl,
                 TvType.Movie,
                 dataUrl = data.toJson()
