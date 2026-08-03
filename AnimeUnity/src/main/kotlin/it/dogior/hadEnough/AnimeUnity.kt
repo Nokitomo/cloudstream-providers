@@ -7,6 +7,7 @@ import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.LoadResponse.Companion.addAniListId
 import com.lagradost.cloudstream3.LoadResponse.Companion.addDuration
+import com.lagradost.cloudstream3.LoadResponse.Companion.addImdbId
 import com.lagradost.cloudstream3.LoadResponse.Companion.addMalId
 import com.lagradost.cloudstream3.LoadResponse.Companion.addScore
 import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
@@ -1138,6 +1139,13 @@ class AnimeUnity(
 
         val primaryAnime = subPageData?.anime ?: dubPageData?.anime ?: currentAnime
         val title = getAnimeTitle(primaryAnime)
+        val cinemetaImdbId = runCatching {
+            AnimeUnityCinemetaClient.resolve(
+                titleCandidates = listOfNotNull(primaryAnime.titleIt, primaryAnime.titleEng, primaryAnime.title),
+                year = primaryAnime.date.toIntOrNull(),
+                isMovie = primaryAnime.type == "Movie",
+            )
+        }.getOrNull()
         val relatedAnimes = groupAnimeCards(currentPageData.relatedAnime).amap { entry ->
             val anime = entry.anime
             val relatedTitle = getAnimeTitle(anime)
@@ -1219,6 +1227,7 @@ class AnimeUnity(
             }
             addAniListId(primaryAnime.anilistId)
             addMalId(primaryAnime.malId)
+            cinemetaImdbId?.let { this.addImdbId(it) }
             if (trailerUrl != null) {
                 addTrailer(trailerUrl)
             }
