@@ -20,7 +20,7 @@ internal object AnimeUnityCinemetaClient {
         cache[key]?.takeIf { it.expiresAt > System.currentTimeMillis() }?.let { return it.value }
         val type = if (isMovie) "movie" else "series"
         val result = candidates.firstNotNullOfOrNull { title ->
-            val encoded = URLEncoder.encode(title, StandardCharsets.UTF_8.name())
+            val encoded = URLEncoder.encode(title, StandardCharsets.UTF_8.name()).replace("+", "%20")
             val response = runCatching { app.get("https://v3-cinemeta.strem.io/catalog/$type/top/search=$encoded.json", timeout = 10L) }.getOrNull()
                 ?: return@firstNotNullOfOrNull null
             if (response.code !in 200..299) return@firstNotNullOfOrNull null
