@@ -85,8 +85,7 @@ internal class StreamingCommunityClient(
     }
 
     fun cdnUrl(props: JSONObject): String {
-        return props.optNullableString("cdn_url")?.trimEnd('/')
-            ?: "https://cdn.${hostOf(rootUrl())}"
+        return StreamingCommunityCdnResolver.resolve(props, rootUrl())
     }
 
     suspend fun findTitle(
@@ -240,7 +239,7 @@ internal class StreamingCommunityClient(
 
     fun imageUrl(filename: String?): String? {
         val file = filename?.takeIf(String::isNotBlank) ?: return null
-        return "https://cdn.${hostOf(rootUrl())}/images/$file"
+        return "${StreamingCommunityCdnResolver.resolve(JSONObject(), rootUrl())}/images/$file"
     }
 
     fun showStatus(status: String?): ShowStatus? = when (status?.trim()?.lowercase(Locale.ROOT)) {
@@ -579,10 +578,6 @@ internal class StreamingCommunityClient(
             .replace(Regex("""\(\d{4}\)"""), "")
             .replace(Regex("""[^a-z0-9]+"""), " ")
             .trim()
-    }
-
-    private fun hostOf(url: String): String {
-        return url.substringAfter("://").substringBefore('/').substringBefore(':')
     }
 
     private companion object {

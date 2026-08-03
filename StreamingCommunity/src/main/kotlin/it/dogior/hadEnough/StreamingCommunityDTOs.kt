@@ -91,7 +91,9 @@ data class InertiaResponse(
 
 data class Props(
     @JsonProperty("scws_url") val scwsUrl: String,
-    @JsonProperty("cdn_url") val cdnUrl: String,
+    @JsonProperty("cdn_url") val cdnUrl: String?,
+    @JsonProperty("cdnUrl") val cdnUrlCamel: String? = null,
+    @JsonProperty("cdn") val cdn: String? = null,
     @JsonProperty("title") val title: TitleProp?,
     @JsonProperty("loadedSeason") val loadedSeason: Season?,
     @JsonProperty("sliders") val sliders: List<Slider>?,

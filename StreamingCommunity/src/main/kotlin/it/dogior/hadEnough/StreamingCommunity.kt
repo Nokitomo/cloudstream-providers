@@ -42,7 +42,8 @@ class StreamingCommunity(
 ) : MainAPI() {
     private val siteRootUrl = resolveBaseUrl(customBaseUrl)
     private val siteHost = siteRootUrl.toHttpUrl().host
-    private val cdnHost = resolveCdnHost(siteHost)
+    private val fallbackCdnHost = resolveCdnHost(siteHost)
+    private var cdnBaseUrl = "https://$fallbackCdnHost"
     private var inertiaVersion = ""
     private var decodedXsrfToken = ""
     private val headers = mapOf(
@@ -250,11 +251,11 @@ class StreamingCommunity(
 
                 if (title.type == "tv") {
                     newTvSeriesSearchResponse(title.name, url) {
-                        posterUrl = "https://$cdnHost/images/" + title.getPoster()
+                        posterUrl = "$cdnBaseUrl/images/" + title.getPoster()
                     }
                 } else {
                     newMovieSearchResponse(title.name, url) {
-                        posterUrl = "https://$cdnHost/images/" + title.getPoster()
+                        posterUrl = "$cdnBaseUrl/images/" + title.getPoster()
                     }
                 }
             }
@@ -360,7 +361,7 @@ class StreamingCommunity(
             val img = resp.select("img.poster.w-full").attr("srcset").split(", ").last()
             return img
         } else {
-            return title.getBackgroundImageId().let { "https://$cdnHost/images/$it" }
+            return title.getBackgroundImageId().let { "$cdnBaseUrl/images/$it" }
         }
     }
 
@@ -373,6 +374,7 @@ class StreamingCommunity(
         val responseBody = response.body.string()
 
         val props = parseJson<InertiaResponse>(responseBody).props
+        cdnBaseUrl = StreamingCommunityCdnResolver.resolve(props.cdnUrl ?: props.cdnUrlCamel ?: props.cdn, siteRootUrl)
         val title = props.title!!
         val initialComingSoon = StreamingCommunityAvailabilityResolver.isUpcoming(title.status, title.releaseDate)
         val hasPlayableMovie = if (
@@ -406,7 +408,7 @@ class StreamingCommunity(
             ) {
                 this.posterUrl = poster
                 title.getBackgroundImageId()
-                    .let { this.backgroundPosterUrl = "https://$cdnHost/images/$it" }
+                    .let { this.backgroundPosterUrl = "$cdnBaseUrl/images/$it" }
 
                 this.tags = genres
                 this.comingSoon = comingSoon
@@ -441,7 +443,7 @@ class StreamingCommunity(
             ) {
                 this.posterUrl = poster
                 title.getBackgroundImageId()
-                    .let { this.backgroundPosterUrl = "https://$cdnHost/images/$it" }
+                    .let { this.backgroundPosterUrl = "$cdnBaseUrl/images/$it" }
 
                 this.tags = genres
                 this.comingSoon = comingSoon
@@ -522,7 +524,7 @@ class StreamingCommunity(
                 episodeList.add(
                     newEpisode(loadData.toJson()) {
                         this.name = ep.name
-                        this.posterUrl = props.cdnUrl + "/images/" + ep.getCover()
+                        this.posterUrl = "$cdnBaseUrl/images/" + ep.getCover()
                         this.description = ep.plot
                         this.episode = ep.number
                         this.season = season.number
