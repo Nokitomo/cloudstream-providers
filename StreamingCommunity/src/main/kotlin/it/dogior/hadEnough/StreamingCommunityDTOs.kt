@@ -12,6 +12,18 @@ data class GenreRequest(
     val id: Int
 )
 
+data class ArchiveRequest(
+    val type: String? = null,
+    val sort: String = "release_date",
+    val genreId: Int? = null,
+    val year: Int? = null,
+    val score: Int? = null,
+    val views: Int? = null,
+    val service: String? = null,
+    val quality: String? = null,
+    val age: Int? = null,
+)
+
 data class SliderFetchRequestSlider(
     val name: String,
     val genre: String?

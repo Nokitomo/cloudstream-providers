@@ -72,6 +72,10 @@ data class StreamCenterTvArchiveFilters(
     val minimumScore: Int? = null,
     val countryId: Int? = null,
     val sort: String? = null,
+    val minimumViews: Int? = null,
+    val service: String? = null,
+    val quality: String? = null,
+    val minimumAge: Int? = null,
 )
 
 typealias StreamCenterMovieArchiveFilters = StreamCenterTvArchiveFilters
@@ -1517,6 +1521,10 @@ class StreamCenterPlugin : Plugin() {
                     minimumScore = json.optInt("minimumScore").takeIf { it in 1..10 },
                     countryId = json.optInt("countryId").takeIf { it > 0 },
                     sort = json.optString("sort").takeIf { it.isNotBlank() },
+                    minimumViews = json.optInt("minimumViews").takeIf { it > 0 },
+                    service = json.optString("service").takeIf { it.isNotBlank() },
+                    quality = json.optString("quality").takeIf { it.isNotBlank() },
+                    minimumAge = json.optInt("minimumAge").takeIf { it > 0 },
                 )
             }.getOrNull()
         }
@@ -1547,6 +1555,10 @@ class StreamCenterPlugin : Plugin() {
             filters.minimumScore?.let { put("minimumScore", it) }
             filters.countryId?.let { put("countryId", it) }
             filters.sort?.let { put("sort", it) }
+            filters.minimumViews?.let { put("minimumViews", it) }
+            filters.service?.let { put("service", it) }
+            filters.quality?.let { put("quality", it) }
+            filters.minimumAge?.let { put("minimumAge", it) }
         }.toString()
 
         fun deleteTvCustomSection(sharedPref: SharedPreferences?, sectionKey: String) {
@@ -1624,6 +1636,10 @@ class StreamCenterPlugin : Plugin() {
                     minimumScore = json.optInt("minimumScore").takeIf { it in 1..10 },
                     countryId = json.optInt("countryId").takeIf { it > 0 },
                     sort = json.optString("sort").takeIf { it.isNotBlank() },
+                    minimumViews = json.optInt("minimumViews").takeIf { it > 0 },
+                    service = json.optString("service").takeIf { it.isNotBlank() },
+                    quality = json.optString("quality").takeIf { it.isNotBlank() },
+                    minimumAge = json.optInt("minimumAge").takeIf { it > 0 },
                 )
             }.getOrNull()
         }

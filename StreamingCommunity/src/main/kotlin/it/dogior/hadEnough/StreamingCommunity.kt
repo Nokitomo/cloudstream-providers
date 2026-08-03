@@ -135,6 +135,8 @@ class StreamingCommunity(
         GenreRequest(nameEN = "Reality", nameIT = "Reality", id = 18).toJson() to "Genre",
         GenreRequest(nameEN = "Romance", nameIT = "Romance", id = 15).toJson() to "Genre",
         GenreRequest(nameEN = "Thriller", nameIT = "Thriller", id = 5).toJson() to "Genre",
+        ArchiveRequest(type = "movie").toJson() to "Archive",
+        ArchiveRequest(type = "tv").toJson() to "Archive",
     )
 
     private fun isHtmlPayload(payload: String): Boolean {
@@ -311,6 +313,25 @@ class StreamingCommunity(
                         list = searchResponseBuilder(data)
                     ), hasNext = hasNext
                 )
+            }
+            "Archive" -> {
+                val archive = parseJson<ArchiveRequest>(request.data)
+                if (headers["Cookie"].isNullOrEmpty()) setupHeaders()
+                val params = buildList {
+                    archive.type?.let { add("type=$it") }
+                    add("sort=${archive.sort}")
+                    archive.genreId?.let { add("genre%5B%5D=$it") }
+                    archive.year?.let { add("year=$it") }
+                    archive.score?.let { add("score=$it") }
+                    archive.views?.let { add("views=$it") }
+                    archive.service?.let { add("service=$it") }
+                    archive.quality?.let { add("quality=$it") }
+                    archive.age?.let { add("age=$it") }
+                    if (page > 1) add("page=$page")
+                }.joinToString("&")
+                val payload = app.get("$mainUrl/archive?$params", headers = getSliderFetchHeaders()).body.string()
+                val data = parseBrowseTitles(payload, "Archive page=$page")
+                return newHomePageResponse(HomePageList("Archivio", searchResponseBuilder(data)), hasNext = data.size >= 60)
             }
             else -> {
                 return null

@@ -961,6 +961,10 @@ class StreamCenter internal constructor(
             filters.minimumScore?.let { add("score=$it") }
             filters.countryId?.let { add("country%5B%5D=$it") }
             add("sort=${filters.sort ?: "release_date"}")
+            filters.minimumViews?.let { add("views=$it") }
+            filters.service?.let { add("service=$it") }
+            filters.quality?.let { add("quality=$it") }
+            filters.minimumAge?.let { add("age=$it") }
             if (page > 1) add("page=$page")
         }.joinToString("&")
         val props = streamingCommunityClient.fetchPageProps("$streamingCommunityMainUrl/archive?$query")
