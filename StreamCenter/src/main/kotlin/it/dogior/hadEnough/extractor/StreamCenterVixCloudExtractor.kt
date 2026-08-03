@@ -6,7 +6,6 @@ import com.lagradost.cloudstream3.utils.ExtractorApi
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.newExtractorLink
-import org.json.JSONObject
 
 class StreamCenterVixCloudExtractor(
     private val sourceName: String = "VixCloud",
@@ -28,30 +27,20 @@ class StreamCenterVixCloudExtractor(
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit,
     ) {
-        callback(
-            newExtractorLink(
-                source = sourceName,
-                name = displayName,
-                url = getPlaylistLink(url),
-                type = ExtractorLinkType.M3U8,
-            ) {
-                this.headers = this@StreamCenterVixCloudExtractor.headers
-            }
-        )
-    }
-
-    private suspend fun getPlaylistLink(url: String): String {
-        return StreamCenterVixParser.playlistUrl(getScript(url))
-    }
-
-    private suspend fun getScript(url: String): JSONObject {
-        val script = app.get(url, headers = headers).document
-            .select("script")
-            .firstOrNull { it.data().contains("masterPlaylist") }
-            ?.data()
-            ?.replace("\n", "\t")
-            ?: error("Missing VixCloud masterPlaylist script")
-
-        return StreamCenterVixParser.parseScript(script)
+        val document = app.get(url, headers = headers).document
+        val html = document.select("script").firstOrNull { it.data().contains("masterPlaylist") }?.data().orEmpty()
+        if (html.isBlank()) error("Missing VixCloud stream script")
+        StreamCenterVixStreamParser.parse(html, url).forEach { stream ->
+            callback(
+                newExtractorLink(
+                    source = "$sourceName ${stream.label}",
+                    name = "$displayName ${stream.label}",
+                    url = stream.url,
+                    type = if (stream.isDownload && !stream.url.contains(".m3u8", ignoreCase = true)) ExtractorLinkType.VIDEO else ExtractorLinkType.M3U8,
+                ) {
+                    this.headers = this@StreamCenterVixCloudExtractor.headers
+                }
+            )
+        }
     }
 }
