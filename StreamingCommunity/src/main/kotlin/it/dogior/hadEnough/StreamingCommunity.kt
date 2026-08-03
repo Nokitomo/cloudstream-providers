@@ -153,11 +153,12 @@ class StreamingCommunity(
             Log.e(TAG, "$logContext: empty payload")
             return null
         }
-        if (isHtmlPayload(payload)) {
-            Log.e(TAG, "$logContext: expected JSON but received HTML payload")
+        val json = StreamingCommunityPayloadParser.parseObject(payload)
+        if (json == null) {
+            Log.e(TAG, "$logContext: unable to extract JSON/Inertia payload")
             return null
         }
-        return runCatching { parseJson<InertiaResponse>(payload) }
+        return runCatching { parseJson<InertiaResponse>(json.toString()) }
             .onFailure { Log.e(TAG, "$logContext: invalid JSON payload - ${it.message}") }
             .getOrNull()
     }
@@ -378,7 +379,8 @@ class StreamingCommunity(
         val response = app.get(actualUrl, headers = headers)
         val responseBody = response.body.string()
 
-        val props = parseJson<InertiaResponse>(responseBody).props
+        val props = parseInertiaPayload(responseBody, "Load")?.props
+            ?: error("StreamingCommunity: payload dettaglio non valido")
         cdnBaseUrl = StreamingCommunityCdnResolver.resolve(props.cdnUrl ?: props.cdnUrlCamel ?: props.cdn, siteRootUrl)
         val title = props.title!!
         val resolvedTitleName = StreamingCommunityTitleResolver.resolve(title.name, title.slug, title.translations)
@@ -514,9 +516,11 @@ class StreamingCommunity(
                     setupHeaders()
                 }
                 val url = "$mainUrl/titles/${title.id}-${title.slug}/season-${season.number}"
-                val obj =
-                    parseJson<InertiaResponse>(app.get(url, headers = headers).body.string())
-                responseEpisodes.addAll(obj.props.loadedSeason?.episodes!!)
+                val seasonPayload = parseInertiaPayload(
+                    app.get(url, headers = headers).body.string(),
+                    "Season ${season.number}",
+                )
+                responseEpisodes.addAll(seasonPayload?.props?.loadedSeason?.episodes.orEmpty())
             }
             responseEpisodes.forEach { ep ->
 
