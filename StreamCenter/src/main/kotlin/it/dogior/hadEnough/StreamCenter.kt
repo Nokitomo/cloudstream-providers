@@ -100,6 +100,7 @@ import it.dogior.hadEnough.util.optNullableString
 import it.dogior.hadEnough.util.parseWholeAnimeEpisodeNumber
 import it.dogior.hadEnough.util.sortedEpisodeNumbers
 import it.dogior.hadEnough.util.StreamCenterLogger
+import it.dogior.hadEnough.util.StreamingCommunityAvailabilityResolver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
@@ -6531,6 +6532,7 @@ class StreamCenter internal constructor(
                     this.plot = title.plot
                     this.tags = title.genres
                     this.showStatus = streamingCommunityClient.showStatus(title.status)
+                    this.comingSoon = StreamingCommunityAvailabilityResolver.isUpcoming(title.status, title.releaseDate)
                     this.contentRating = title.age?.let { "$it+" }
                     this.recommendations = recommendations
                 }
@@ -6577,6 +6579,7 @@ class StreamCenter internal constructor(
                     showAsTags = catalogDefinition == null && StreamCenterPlugin.shouldShowTrackingIds(sharedPref),
                 )
                 if (!performanceMode) addScore(title.score)
+                this.comingSoon = StreamingCommunityAvailabilityResolver.isUpcoming(title.status, title.releaseDate)
             }
         }
         val torrentProvenance = torrentPlaybackProvenance(torrentContext)

@@ -356,6 +356,7 @@ class StreamingCommunity(
 
         val props = parseJson<InertiaResponse>(responseBody).props
         val title = props.title!!
+        val comingSoon = StreamingCommunityAvailabilityResolver.isUpcoming(title.status, title.releaseDate)
         val genres = title.genres.map { it.name.capitalize() }
         val year = title.releaseDate?.substringBefore('-')?.toIntOrNull()
         val related = props.sliders?.getOrNull(0)
@@ -376,6 +377,7 @@ class StreamingCommunity(
                     .let { this.backgroundPosterUrl = "https://$cdnHost/images/$it" }
 
                 this.tags = genres
+                this.comingSoon = comingSoon
                 this.episodes = episodes
                 this.year = year
                 this.plot = title.plot
@@ -410,6 +412,7 @@ class StreamingCommunity(
                     .let { this.backgroundPosterUrl = "https://$cdnHost/images/$it" }
 
                 this.tags = genres
+                this.comingSoon = comingSoon
                 this.year = year
                 this.plot = title.plot
                 title.age?.let { this.contentRating = "$it+" }

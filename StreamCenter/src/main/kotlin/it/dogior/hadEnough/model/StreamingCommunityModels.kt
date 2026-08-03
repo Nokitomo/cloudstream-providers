@@ -8,6 +8,7 @@ internal data class StreamingCommunityTitle(
     val tmdbId: Int?,
     val imdbId: String? = null,
     val year: Int?,
+    val releaseDate: String? = null,
     val seasons: List<StreamingCommunitySeason>,
     val plot: String? = null,
     val score: String? = null,

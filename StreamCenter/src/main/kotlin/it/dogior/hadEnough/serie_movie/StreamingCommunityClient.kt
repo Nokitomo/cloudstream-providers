@@ -495,6 +495,7 @@ internal class StreamingCommunityClient(
             tmdbId = optNullableInt("tmdb_id"),
             imdbId = optNullableString("imdb_id"),
             year = optNullableString("release_date")?.substringBefore('-')?.toIntOrNull(),
+            releaseDate = optNullableString("release_date_it") ?: optNullableString("release_date"),
             seasons = seasons,
             plot = cleanText(optNullableString("plot")),
             score = optNullableString("score"),
