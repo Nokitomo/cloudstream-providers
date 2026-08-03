@@ -32,7 +32,6 @@ import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.RequestBody.Companion.toRequestBody
-import org.jsoup.parser.Parser
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
@@ -145,9 +144,7 @@ class StreamingCommunity(
     }
 
     private fun extractInertiaPageJson(html: String): String? {
-        val dataPageRaw = org.jsoup.Jsoup.parse(html).selectFirst("#app")?.attr("data-page")
-        if (dataPageRaw.isNullOrBlank()) return null
-        return Parser.unescapeEntities(dataPageRaw, true)
+        return StreamingCommunityPayloadParser.extractPageJson(html)
     }
 
     private fun parseInertiaPayload(payload: String, logContext: String): InertiaResponse? {

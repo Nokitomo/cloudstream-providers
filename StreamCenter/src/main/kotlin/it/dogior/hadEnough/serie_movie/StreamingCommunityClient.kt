@@ -14,7 +14,6 @@ import it.dogior.hadEnough.util.optNullableString
 import it.dogior.hadEnough.util.StreamCenterLogger
 import it.dogior.hadEnough.util.StreamingCommunityAvailabilityResolver
 import org.jsoup.Jsoup
-import org.jsoup.parser.Parser
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URLDecoder
@@ -70,9 +69,7 @@ internal class StreamingCommunityClient(
 
     suspend fun fetchPageProps(pageUrl: String): JSONObject? {
         val text = app.get(pageUrl, headers = defaultHeaders).body.string()
-        val json = extractPageJson(text)
-            ?.let { runCatching { JSONObject(it) }.getOrNull() }
-            ?: return null
+        val json = StreamingCommunityPayloadParser.parseObject(text) ?: return null
         return json.optJSONObject("props") ?: json
     }
 
@@ -83,9 +80,7 @@ internal class StreamingCommunityClient(
             params = mapOf("q" to query, "page" to page.toString()),
             headers = defaultHeaders,
         ).body.string()
-        val json = extractPageJson(text)
-            ?.let { runCatching { JSONObject(it) }.getOrNull() }
-            ?: return null
+        val json = StreamingCommunityPayloadParser.parseObject(text) ?: return null
         return json.optJSONObject("props") ?: json
     }
 
@@ -228,7 +223,7 @@ internal class StreamingCommunityClient(
         return runCatching {
             ensureHeaders()
             val watchHtml = app.get("${mainUrl()}/watch/${title.id}", headers = sessionHeaders).body.string()
-            val props = extractPageJson(watchHtml)?.let(::JSONObject)
+            val props = StreamingCommunityPayloadParser.parseObject(watchHtml)
                 ?.optJSONObject("props")
             val embedFromProps = props?.optString("embedUrl").orEmpty()
             val rawIframe = embedFromProps.takeIf(String::isNotBlank)
@@ -263,7 +258,7 @@ internal class StreamingCommunityClient(
 
     private fun parseSearchResults(text: String): List<StreamingCommunityTitle> {
         return runCatching {
-            val json = JSONObject(extractPageJson(text) ?: text)
+            val json = StreamingCommunityPayloadParser.parseObject(text) ?: return@runCatching emptyList()
             val titles = json.optJSONArray("data")
                 ?: json.optJSONObject("props")?.optJSONArray("titles")
                 ?: JSONArray()
@@ -314,7 +309,7 @@ internal class StreamingCommunityClient(
         }.getOrNull() ?: return null
 
         return runCatching {
-            val json = JSONObject(extractPageJson(text) ?: text)
+            val json = StreamingCommunityPayloadParser.parseObject(text) ?: return null
             val props = json.optJSONObject("props") ?: json
             val resolvedTitle = props.optJSONObject("title")?.toTitle() ?: return null
             val loadedSeason = props.optJSONObject("loadedSeason")?.toSeason()
@@ -390,7 +385,7 @@ internal class StreamingCommunityClient(
             )
         }.getOrNull() ?: return null
         return runCatching {
-            val json = JSONObject(extractPageJson(text) ?: text)
+            val json = StreamingCommunityPayloadParser.parseObject(text) ?: return null
             val props = json.optJSONObject("props") ?: json
             props.optJSONObject("loadedSeason")?.toSeason()
         }.onFailure {
@@ -487,14 +482,6 @@ internal class StreamingCommunityClient(
             }
             json
         }.getOrNull()
-    }
-
-    private fun extractPageJson(payload: String): String? {
-        val trimmedPayload = payload.trimStart()
-        if (!trimmedPayload.startsWith("<")) return null
-        val dataPageRaw = Jsoup.parse(payload).selectFirst("#app")?.attr("data-page")
-        if (dataPageRaw.isNullOrBlank()) return null
-        return Parser.unescapeEntities(dataPageRaw, true)
     }
 
     private fun JSONObject.toTitle(): StreamingCommunityTitle? {
