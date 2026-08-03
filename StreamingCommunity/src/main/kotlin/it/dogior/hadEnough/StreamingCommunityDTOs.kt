@@ -62,7 +62,7 @@ data class Title(
     fun getPoster(): String? {
         this.images.forEach {
             if (it.type == "poster") {
-                return it.filename
+                return it.value()
             }
         }
         return null
@@ -76,11 +76,17 @@ data class TitleTranslation(
 )
 
 data class PosterImage(
-    @JsonProperty("filename") val filename: String,
+    @JsonProperty("filename") val filename: String? = null,
     @JsonProperty("type") val type: String,
-    @JsonProperty("imageable_type") val imageableType: String,
-    @JsonProperty("imageable_id") val imageableId: Int,
-)
+    @JsonProperty("imageable_type") val imageableType: String? = null,
+    @JsonProperty("imageable_id") val imageableId: Int? = null,
+    @JsonProperty("original_url_field") val originalUrlField: String? = null,
+    @JsonProperty("url") val url: String? = null,
+    @JsonProperty("src") val src: String? = null,
+    @JsonProperty("path") val path: String? = null,
+) {
+    fun value(): String? = originalUrlField ?: url ?: src ?: path ?: filename
+}
 
 data class Genre(
     @JsonProperty("id") val id: Int,
@@ -132,7 +138,7 @@ data class Episode(
     fun getCover(): String? {
         this.images.forEach {
             if (it.type == "cover") {
-                return it.filename
+                return it.value()
             }
         }
         return null
@@ -176,7 +182,7 @@ data class TitleProp(
     fun getBackgroundImageId(): String? {
         this.images.forEach {
             if (it.type == "background") {
-                return it.filename
+                return it.value()
             }
         }
         return null
@@ -184,7 +190,7 @@ data class TitleProp(
     fun getPosterImageId(): String? {
         this.images.forEach {
             if (it.type == "poster") {
-                return it.filename
+                return it.value()
             }
         }
         return null

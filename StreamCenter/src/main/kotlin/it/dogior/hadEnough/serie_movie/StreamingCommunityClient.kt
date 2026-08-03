@@ -238,8 +238,7 @@ internal class StreamingCommunityClient(
     }
 
     fun imageUrl(filename: String?): String? {
-        val file = filename?.takeIf(String::isNotBlank) ?: return null
-        return "${StreamingCommunityCdnResolver.resolve(JSONObject(), rootUrl())}/images/$file"
+        return StreamingCommunityImageResolver.resolve(filename, StreamingCommunityCdnResolver.resolve(JSONObject(), rootUrl()))
     }
 
     fun showStatus(status: String?): ShowStatus? = when (status?.trim()?.lowercase(Locale.ROOT)) {
@@ -547,7 +546,12 @@ internal class StreamingCommunityClient(
     private fun JSONArray.imageFilename(imageType: String): String? {
         for (index in 0 until length()) {
             val image = optJSONObject(index) ?: continue
-            if (image.optNullableString("type") == imageType) return image.optNullableString("filename")
+            if (image.optNullableString("type") == imageType) {
+                return listOf("original_url_field", "url", "src", "path", "filename")
+                    .asSequence()
+                    .mapNotNull { key -> image.optNullableString(key)?.takeIf(String::isNotBlank) }
+                    .firstOrNull()
+            }
         }
         return null
     }

@@ -252,11 +252,11 @@ class StreamingCommunity(
 
                 if (title.type == "tv") {
                     newTvSeriesSearchResponse(resolvedName, url) {
-                        posterUrl = "$cdnBaseUrl/images/" + title.getPoster()
+                        posterUrl = imageUrl(title.getPoster())
                     }
                 } else {
                     newMovieSearchResponse(resolvedName, url) {
-                        posterUrl = "$cdnBaseUrl/images/" + title.getPoster()
+                        posterUrl = imageUrl(title.getPoster())
                     }
                 }
             }
@@ -355,6 +355,10 @@ class StreamingCommunity(
         return newSearchResponseList(items, hasNext = hasNext)
     }
 
+    private fun imageUrl(value: String?): String? {
+        return StreamingCommunityImageResolver.resolve(value, cdnBaseUrl)
+    }
+
     private suspend fun getPoster(title: TitleProp): String? {
         if (title.tmdbId != null) {
             val tmdbUrl = "https://www.themoviedb.org/${title.type}/${title.tmdbId}"
@@ -362,7 +366,7 @@ class StreamingCommunity(
             val img = resp.select("img.poster.w-full").attr("srcset").split(", ").last()
             return img
         } else {
-            return title.getBackgroundImageId().let { "$cdnBaseUrl/images/$it" }
+            return imageUrl(title.getBackgroundImageId())
         }
     }
 
@@ -410,7 +414,7 @@ class StreamingCommunity(
             ) {
                 this.posterUrl = poster
                 title.getBackgroundImageId()
-                    .let { this.backgroundPosterUrl = "$cdnBaseUrl/images/$it" }
+                    .let { this.backgroundPosterUrl = imageUrl(it) }
 
                 this.tags = genres
                 this.comingSoon = comingSoon
@@ -445,7 +449,7 @@ class StreamingCommunity(
             ) {
                 this.posterUrl = poster
                 title.getBackgroundImageId()
-                    .let { this.backgroundPosterUrl = "$cdnBaseUrl/images/$it" }
+                    .let { this.backgroundPosterUrl = imageUrl(it) }
 
                 this.tags = genres
                 this.comingSoon = comingSoon
@@ -526,7 +530,7 @@ class StreamingCommunity(
                 episodeList.add(
                     newEpisode(loadData.toJson()) {
                         this.name = ep.name
-                        this.posterUrl = "$cdnBaseUrl/images/" + ep.getCover()
+                        this.posterUrl = imageUrl(ep.getCover())
                         this.description = ep.plot
                         this.episode = ep.number
                         this.season = season.number
