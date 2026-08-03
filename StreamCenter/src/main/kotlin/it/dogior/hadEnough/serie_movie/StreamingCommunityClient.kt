@@ -188,7 +188,7 @@ internal class StreamingCommunityClient(
             }
             seasonWithEpisodes.episodes.forEach { episode ->
                 episodes[seasonWithEpisodes.number to episode.number] = StreamingCommunityPlaybackData(
-                    iframeUrl = "${mainUrl()}/iframe/${title.id}?episode_id=${episode.id}&canPlayFHD=1",
+                    iframeUrl = StreamingCommunityPlaybackUrlBuilder.episode(mainUrl(), title.id, episode.id),
                     type = "tv",
                     tmdbId = title.tmdbId,
                     imdbId = title.imdbId,
@@ -209,7 +209,7 @@ internal class StreamingCommunityClient(
     fun moviePlayback(title: StreamingCommunityTitle): StreamingCommunityPlaybackData? {
         if (title.type != "movie") return null
         return StreamingCommunityPlaybackData(
-            iframeUrl = "${mainUrl()}/iframe/${title.id}&canPlayFHD=1",
+            iframeUrl = StreamingCommunityPlaybackUrlBuilder.movie(mainUrl(), title.id),
             type = title.type,
             tmdbId = title.tmdbId,
             imdbId = title.imdbId,

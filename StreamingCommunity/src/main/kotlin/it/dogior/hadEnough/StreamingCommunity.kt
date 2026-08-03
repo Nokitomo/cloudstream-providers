@@ -437,7 +437,7 @@ class StreamingCommunity(
             return tvShow
         } else {
             val data = LoadData(
-                "$mainUrl/iframe/${title.id}&canPlayFHD=1",
+                StreamingCommunityPlaybackUrlBuilder.movie(mainUrl, title.id),
                 "movie",
                 title.tmdbId
             )
@@ -521,7 +521,7 @@ class StreamingCommunity(
             responseEpisodes.forEach { ep ->
 
                 val loadData = LoadData(
-                    "$mainUrl/iframe/${title.id}?episode_id=${ep.id}&canPlayFHD=1",
+                    StreamingCommunityPlaybackUrlBuilder.episode(mainUrl, title.id, ep.id),
                     type = "tv",
                     tmdbId = title.tmdbId,
                     seasonNumber = season.number,
