@@ -133,7 +133,8 @@ data class Episode(
     @JsonProperty("duration") val duration: Int?,
     @JsonProperty("scws_id") val scwsId: Int,
     @JsonProperty("season_id") val seasonId: Int,
-    @JsonProperty("images") val images: List<PosterImage>
+    @JsonProperty("images") val images: List<PosterImage>,
+    @JsonProperty("translations") val translations: List<TitleTranslation> = emptyList()
 ){
     fun getCover(): String? {
         this.images.forEach {

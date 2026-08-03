@@ -6485,6 +6485,7 @@ class StreamCenter internal constructor(
                 ) {
                     season = seasonEpisode.first
                     episode = seasonEpisode.second
+                    this.name = playback.episodeName ?: "Episode ${seasonEpisode.second}"
                     posterUrl = fallbackPoster
                 }
             }

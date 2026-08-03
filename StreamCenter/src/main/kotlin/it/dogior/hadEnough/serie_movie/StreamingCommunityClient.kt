@@ -194,6 +194,7 @@ internal class StreamingCommunityClient(
                     imdbId = title.imdbId,
                     seasonNumber = seasonWithEpisodes.number,
                     episodeNumber = episode.number,
+                    episodeName = episode.name,
                 )
             }
         }
@@ -537,9 +538,15 @@ internal class StreamingCommunityClient(
     }
 
     private fun JSONObject.toEpisode(): StreamingCommunityEpisode? {
+        val number = optNullableInt("number") ?: return null
         return StreamingCommunityEpisode(
             id = optNullableInt("id") ?: return null,
-            number = optNullableInt("number") ?: return null,
+            number = number,
+            name = StreamingCommunityEpisodeResolver.resolve(
+                optNullableString("name"),
+                number,
+                optJSONArray("translations"),
+            ),
         )
     }
 

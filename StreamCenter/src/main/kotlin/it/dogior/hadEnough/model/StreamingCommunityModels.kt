@@ -30,6 +30,7 @@ internal data class StreamingCommunitySeason(
 internal data class StreamingCommunityEpisode(
     val id: Int,
     val number: Int,
+    val name: String? = null,
 )
 
 internal data class StreamingCommunityPlaybackData(
@@ -39,4 +40,5 @@ internal data class StreamingCommunityPlaybackData(
     val imdbId: String? = null,
     val seasonNumber: Int? = null,
     val episodeNumber: Int? = null,
+    val episodeName: String? = null,
 )

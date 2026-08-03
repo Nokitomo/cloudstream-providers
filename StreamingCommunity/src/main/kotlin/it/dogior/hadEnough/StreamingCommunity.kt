@@ -529,7 +529,7 @@ class StreamingCommunity(
                 )
                 episodeList.add(
                     newEpisode(loadData.toJson()) {
-                        this.name = ep.name
+                        this.name = StreamingCommunityEpisodeResolver.resolve(ep.name, ep.number, ep.translations)
                         this.posterUrl = imageUrl(ep.getCover())
                         this.description = ep.plot
                         this.episode = ep.number
