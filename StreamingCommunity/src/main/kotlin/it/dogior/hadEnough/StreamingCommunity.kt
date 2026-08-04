@@ -38,6 +38,7 @@ import java.nio.charset.StandardCharsets
 import it.dogior.hadEnough.shared.PastebinDomainRegistry
 import it.dogior.hadEnough.shared.PastebinDomainResolver
 import it.dogior.hadEnough.shared.PastebinSite
+import it.dogior.hadEnough.shared.ProviderRedirectResolver
 
 class StreamingCommunity(
     override var lang: String = "it",
@@ -67,7 +68,7 @@ class StreamingCommunity(
     override val hasMainPage = true
 
     private suspend fun ensureRemoteDomain() {
-        val resolvedRoot = if (hasManualBaseUrl) {
+        val candidateRoot = if (hasManualBaseUrl) {
             configuredBaseUrl
         } else {
             resolveBaseUrl(PastebinDomainResolver.resolve(
@@ -76,6 +77,11 @@ class StreamingCommunity(
                 configuredFallback = configuredBaseUrl,
             ))
         }
+        val resolvedRoot = resolveBaseUrl(ProviderRedirectResolver.resolve(
+            preferences = remoteDomainPreferences,
+            site = PastebinSite.STREAMING_UNITY,
+            initialUrl = candidateRoot,
+        ))
         if (resolvedRoot != siteRootUrl) {
             siteRootUrl = resolvedRoot
             siteHost = siteRootUrl.toHttpUrl().host
