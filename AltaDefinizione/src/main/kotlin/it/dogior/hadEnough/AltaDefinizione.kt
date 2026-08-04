@@ -27,6 +27,7 @@ import org.jsoup.nodes.Element
 import it.dogior.hadEnough.shared.PastebinDomainRegistry
 import it.dogior.hadEnough.shared.PastebinDomainResolver
 import it.dogior.hadEnough.shared.PastebinSite
+import it.dogior.hadEnough.shared.ProviderRedirectResolver
 
 class AltaDefinizione(
     private val remoteDomainPreferences: SharedPreferences? = null,
@@ -38,10 +39,15 @@ class AltaDefinizione(
     override val hasMainPage = true
 
     private suspend fun ensureRemoteDomain() {
-        mainUrl = PastebinDomainResolver.resolve(
+        val candidate = PastebinDomainResolver.resolve(
             preferences = remoteDomainPreferences,
             site = PastebinSite.ALTA_DEFINIZIONE,
             configuredFallback = mainUrl,
+        )
+        mainUrl = ProviderRedirectResolver.resolve(
+            preferences = remoteDomainPreferences,
+            site = PastebinSite.ALTA_DEFINIZIONE,
+            initialUrl = candidate,
         )
     }
 
