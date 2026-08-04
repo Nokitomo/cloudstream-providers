@@ -45,6 +45,7 @@ import java.util.Locale
 import it.dogior.hadEnough.shared.PastebinDomainRegistry
 import it.dogior.hadEnough.shared.PastebinDomainResolver
 import it.dogior.hadEnough.shared.PastebinSite
+import it.dogior.hadEnough.shared.ProviderRedirectResolver
 
 open class AnimeWorldCore(
     isSplit: Boolean = false,
@@ -62,10 +63,15 @@ open class AnimeWorldCore(
     private var headers = mutableMapOf<String, String>()
 
     private suspend fun ensureRemoteDomain() {
-        val resolved = PastebinDomainResolver.resolve(
+        val candidate = PastebinDomainResolver.resolve(
             preferences = remoteDomainPreferences,
             site = PastebinSite.ANIME_WORLD,
             configuredFallback = mainUrl,
+        )
+        val resolved = ProviderRedirectResolver.resolve(
+            preferences = remoteDomainPreferences,
+            site = PastebinSite.ANIME_WORLD,
+            initialUrl = candidate,
         )
         if (resolved != mainUrl) {
             mainUrl = resolved
