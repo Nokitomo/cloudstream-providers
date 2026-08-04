@@ -45,6 +45,7 @@ import org.jsoup.nodes.Document
 import it.dogior.hadEnough.shared.PastebinDomainRegistry
 import it.dogior.hadEnough.shared.PastebinDomainResolver
 import it.dogior.hadEnough.shared.PastebinSite
+import it.dogior.hadEnough.shared.ProviderRedirectResolver
 
 class CB01(private val remoteDomainPreferences: SharedPreferences? = null) : MainAPI() {
     override var mainUrl = "https://cb01uno.uno"
@@ -55,10 +56,15 @@ class CB01(private val remoteDomainPreferences: SharedPreferences? = null) : Mai
     override var sequentialMainPage = true
 
     private suspend fun ensureRemoteDomain() {
-        mainUrl = PastebinDomainResolver.resolve(
+        val candidate = PastebinDomainResolver.resolve(
             remoteDomainPreferences,
             PastebinSite.CB01,
             mainUrl,
+        )
+        mainUrl = ProviderRedirectResolver.resolve(
+            preferences = remoteDomainPreferences,
+            site = PastebinSite.CB01,
+            initialUrl = candidate,
         )
     }
 
@@ -70,10 +76,6 @@ class CB01(private val remoteDomainPreferences: SharedPreferences? = null) : Mai
         mainUrl to "Film",
         "$mainUrl/serietv" to "Serie TV"
     )
-
-    companion object {
-        var actualMainUrl = ""
-    }
 
     private fun fixTitle(title: String, isMovie: Boolean): String {
         if (isMovie) {
@@ -89,13 +91,7 @@ class CB01(private val remoteDomainPreferences: SharedPreferences? = null) : Mai
         ensureRemoteDomain()
         val currentData = rebaseProviderUrl(request.data)
         val url = if (page > 1) "$currentData/page/$page/" else currentData
-        val response = app.get(url)
-
-        if (actualMainUrl.isEmpty()) {
-            actualMainUrl = response.okhttpResponse.request.url.toString().substringBeforeLast('/')
-        }
-
-        val document = response.document
+        val document = app.get(url).document
         val items = document.selectFirst(".sequex-one-columns")?.select(".post")
         if (items == null) {
             Log.d("CB01 Page Response", document.toString())
