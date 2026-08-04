@@ -123,6 +123,18 @@ object PastebinDomainRegistry {
         return normalized.takeIf { site.hostMatchers.any { matcher -> matcher.matches(host) } }
     }
 
+    fun resolveRedirectOrigin(
+        requestedUrl: String?,
+        responseUrl: String?,
+        site: PastebinSite,
+    ): String? {
+        val requestedOrigin = normalizeFallback(requestedUrl) ?: return null
+        val responseOrigin = normalizeHttpsResponseOrigin(responseUrl) ?: return null
+        val responseHost = URI(responseOrigin).host.lowercase(Locale.ROOT)
+        if (site.hostMatchers.none { matcher -> matcher.matches(responseHost) }) return null
+        return responseOrigin.takeUnless { it.equals(requestedOrigin, ignoreCase = true) }
+    }
+
     private fun parseNamedEntry(line: String): Pair<String, String>? {
         if (line.startsWith("http://", true) || line.startsWith("https://", true)) return null
         val separator = line.indexOf('=')
@@ -149,6 +161,20 @@ object PastebinDomainRegistry {
             val host = uri.host?.lowercase(Locale.ROOT)?.trimEnd('.') ?: return null
             if (host.isBlank() || host == "localhost") return null
             if (requirePublicHost && (ipAddress.matches(host) || host.endsWith(".local"))) return null
+
+            "https://$host"
+        }.getOrNull()
+    }
+
+    private fun normalizeHttpsResponseOrigin(value: String?): String? {
+        return runCatching {
+            val uri = URI(value?.trim().orEmpty())
+            if (!uri.scheme.equals("https", ignoreCase = true)) return null
+            if (uri.rawUserInfo != null || uri.port != -1) return null
+
+            val host = uri.host?.lowercase(Locale.ROOT)?.trimEnd('.') ?: return null
+            if (host.isBlank() || host == "localhost") return null
+            if (ipAddress.matches(host) || host.endsWith(".local")) return null
 
             "https://$host"
         }.getOrNull()

@@ -86,4 +86,41 @@ class PastebinDomainRegistryTest {
             ),
         )
     }
+
+    @Test
+    fun `accepts a provider redirect and strips its path`() {
+        assertEquals(
+            "https://www.animeunity.new",
+            PastebinDomainRegistry.resolveRedirectOrigin(
+                "https://www.animeunity.old",
+                "https://www.animeunity.new/it/archive?sort=title",
+                PastebinSite.ANIME_UNITY,
+            ),
+        )
+    }
+
+    @Test
+    fun `ignores same-origin navigation and unsafe redirect targets`() {
+        assertNull(
+            PastebinDomainRegistry.resolveRedirectOrigin(
+                "https://www.animeunity.so",
+                "https://www.animeunity.so/login",
+                PastebinSite.ANIME_UNITY,
+            ),
+        )
+        assertNull(
+            PastebinDomainRegistry.resolveRedirectOrigin(
+                "https://www.animeunity.so",
+                "https://advertising.example/landing",
+                PastebinSite.ANIME_UNITY,
+            ),
+        )
+        assertNull(
+            PastebinDomainRegistry.resolveRedirectOrigin(
+                "https://www.animeunity.so",
+                "http://www.animeunity.new",
+                PastebinSite.ANIME_UNITY,
+            ),
+        )
+    }
 }
