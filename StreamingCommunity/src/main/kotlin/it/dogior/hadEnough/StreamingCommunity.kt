@@ -39,6 +39,8 @@ import it.dogior.hadEnough.shared.PastebinDomainRegistry
 import it.dogior.hadEnough.shared.PastebinDomainResolver
 import it.dogior.hadEnough.shared.PastebinSite
 import it.dogior.hadEnough.shared.ProviderRedirectResolver
+import it.dogior.hadEnough.shared.StreamingCommunityMirrorCandidate
+import it.dogior.hadEnough.shared.StreamingCommunityMirrorResolver
 
 class StreamingCommunity(
     override var lang: String = "it",
@@ -68,20 +70,42 @@ class StreamingCommunity(
     override val hasMainPage = true
 
     private suspend fun ensureRemoteDomain() {
-        val candidateRoot = if (hasManualBaseUrl) {
-            configuredBaseUrl
+        val resolvedRoot = if (hasManualBaseUrl) {
+            resolveBaseUrl(ProviderRedirectResolver.resolve(
+                preferences = remoteDomainPreferences,
+                site = PastebinSite.STREAMING_UNITY,
+                initialUrl = configuredBaseUrl,
+            ))
         } else {
-            resolveBaseUrl(PastebinDomainResolver.resolve(
+            val streamingUnityUrl = PastebinDomainResolver.resolve(
                 preferences = remoteDomainPreferences,
                 site = PastebinSite.STREAMING_UNITY,
                 configuredFallback = configuredBaseUrl,
+                preferLastGoodForUnchangedCandidate = false,
+            )
+            val streamingCommunityUrl = PastebinDomainResolver.resolve(
+                preferences = remoteDomainPreferences,
+                site = PastebinSite.STREAMING_COMMUNITY,
+                configuredFallback = PastebinSite.STREAMING_COMMUNITY.fallbackUrl,
+                preferLastGoodForUnchangedCandidate = false,
+            )
+            resolveBaseUrl(StreamingCommunityMirrorResolver.resolve(
+                preferences = remoteDomainPreferences,
+                cacheKey = "standalone_streamingunity_primary",
+                candidates = listOf(
+                    StreamingCommunityMirrorCandidate(PastebinSite.STREAMING_UNITY, streamingUnityUrl),
+                    StreamingCommunityMirrorCandidate(PastebinSite.STREAMING_COMMUNITY, streamingCommunityUrl),
+                    StreamingCommunityMirrorCandidate(
+                        PastebinSite.STREAMING_UNITY,
+                        PastebinSite.STREAMING_UNITY.fallbackUrl,
+                    ),
+                    StreamingCommunityMirrorCandidate(
+                        PastebinSite.STREAMING_COMMUNITY,
+                        PastebinSite.STREAMING_COMMUNITY.fallbackUrl,
+                    ),
+                ),
             ))
         }
-        val resolvedRoot = resolveBaseUrl(ProviderRedirectResolver.resolve(
-            preferences = remoteDomainPreferences,
-            site = PastebinSite.STREAMING_UNITY,
-            initialUrl = candidateRoot,
-        ))
         if (resolvedRoot != siteRootUrl) {
             siteRootUrl = resolvedRoot
             siteHost = siteRootUrl.toHttpUrl().host
@@ -111,7 +135,7 @@ class StreamingCommunity(
     }
 
     companion object {
-        const val DEFAULT_BASE_URL = "https://streamingunity.cc/"
+        const val DEFAULT_BASE_URL = "https://streamingunity.vip/"
         var name = "StreamingCommunity"
         const val TAG = "SCommunity"
 

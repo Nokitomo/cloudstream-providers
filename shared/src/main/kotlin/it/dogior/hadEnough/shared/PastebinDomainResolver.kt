@@ -31,6 +31,7 @@ object PastebinDomainResolver {
         site: PastebinSite,
         configuredFallback: String? = null,
         now: Long = System.currentTimeMillis(),
+        preferLastGoodForUnchangedCandidate: Boolean = true,
     ): String {
         val fallback = PastebinDomainRegistry.normalizeFallback(configuredFallback)
             ?: site.fallbackUrl
@@ -38,7 +39,7 @@ object PastebinDomainResolver {
         val cachedAt = currentPayloadTimestamp(preferences)
 
         if (cachedPayload != null && now - cachedAt in 0 until CACHE_TTL_MS) {
-            return resolveCandidate(preferences, site, cachedPayload)
+            return resolveCandidate(preferences, site, cachedPayload, preferLastGoodForUnchangedCandidate)
                 ?: lastGood(preferences, site)
                 ?: fallback
         }
@@ -47,7 +48,7 @@ object PastebinDomainResolver {
             ?: preferences?.getLong(LAST_ATTEMPT_AT_KEY, 0L)
             ?: 0L
         if (now - lastAttemptAt in 0 until FAILURE_RETRY_MS) {
-            return resolveCandidate(preferences, site, cachedPayload.orEmpty())
+            return resolveCandidate(preferences, site, cachedPayload.orEmpty(), preferLastGoodForUnchangedCandidate)
                 ?: lastGood(preferences, site)
                 ?: fallback
         }
@@ -65,7 +66,12 @@ object PastebinDomainResolver {
                 ?.apply()
         }
 
-        return resolveCandidate(preferences, site, refreshedPayload ?: cachedPayload.orEmpty())
+        return resolveCandidate(
+            preferences,
+            site,
+            refreshedPayload ?: cachedPayload.orEmpty(),
+            preferLastGoodForUnchangedCandidate,
+        )
             ?: lastGood(preferences, site)
             ?: fallback
     }
@@ -108,11 +114,14 @@ object PastebinDomainResolver {
         preferences: SharedPreferences?,
         site: PastebinSite,
         payload: String,
+        preferLastGoodForUnchangedCandidate: Boolean,
     ): String? {
         val candidate = PastebinDomainRegistry.resolve(payload, site) ?: return null
         val lastGood = lastGood(preferences, site)
         val lastCandidate = preferences?.getString(lastCandidateKey(site), null)
-        if (candidate == lastCandidate && lastGood != null) return lastGood
+        if (preferLastGoodForUnchangedCandidate && candidate == lastCandidate && lastGood != null) {
+            return lastGood
+        }
 
         preferences?.edit()
             ?.putString(lastCandidateKey(site), candidate)

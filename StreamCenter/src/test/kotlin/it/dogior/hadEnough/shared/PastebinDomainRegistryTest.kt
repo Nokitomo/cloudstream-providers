@@ -123,4 +123,29 @@ class PastebinDomainRegistryTest {
             ),
         )
     }
+
+    @Test
+    fun `streaming mirrors accept both host families while preserving Pastebin priority`() {
+        assertEquals(
+            "https://streamingunity.test",
+            PastebinDomainRegistry.resolve(
+                "https://streamingcommunityz.test\nhttps://streamingunity.test",
+                PastebinSite.STREAMING_UNITY,
+            ),
+        )
+        assertEquals(
+            "https://streamingcommunityz.test",
+            PastebinDomainRegistry.resolve(
+                "https://streamingunity.test\nhttps://streamingcommunityz.test",
+                PastebinSite.STREAMING_COMMUNITY,
+            ),
+        )
+        assertEquals(
+            "https://streamingcommunityz.new",
+            PastebinDomainRegistry.normalizeResponseOriginForSite(
+                "https://streamingcommunityz.new/it/archive",
+                PastebinSite.STREAMING_UNITY,
+            ),
+        )
+    }
 }

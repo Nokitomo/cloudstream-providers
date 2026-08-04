@@ -25,12 +25,16 @@ enum class PastebinSite(
     ),
     STREAMING_UNITY(
         preferenceKey = "streamingunity",
-        fallbackUrl = "https://streamingunity.cc",
-        hostMatchers = listOf(Regex("^(?:www\\.)?streamingunity\\.[a-z0-9-]+$")),
+        fallbackUrl = "https://streamingunity.vip",
+        hostMatchers = listOf(
+            Regex("^(?:www\\.)?streamingunity\\.[a-z0-9-]+$"),
+            Regex("^(?:www\\.)?streamingcommunityz\\.[a-z0-9-]+$"),
+            Regex("^(?:www\\.)?streaming-community\\.[a-z0-9-]+$"),
+        ),
     ),
     STREAMING_COMMUNITY(
         preferenceKey = "streamingcommunity",
-        fallbackUrl = "https://streamingcommunityz.support",
+        fallbackUrl = "https://streamingcommunityz.recipes",
         hostMatchers = listOf(
             Regex("^(?:www\\.)?streamingcommunityz\\.[a-z0-9-]+$"),
             Regex("^(?:www\\.)?streaming-community\\.[a-z0-9-]+$"),
@@ -133,6 +137,14 @@ object PastebinDomainRegistry {
         val responseHost = URI(responseOrigin).host.lowercase(Locale.ROOT)
         if (site.hostMatchers.none { matcher -> matcher.matches(responseHost) }) return null
         return responseOrigin.takeUnless { it.equals(requestedOrigin, ignoreCase = true) }
+    }
+
+    fun normalizeResponseOriginForSite(responseUrl: String?, site: PastebinSite): String? {
+        val responseOrigin = normalizeHttpsResponseOrigin(responseUrl) ?: return null
+        val responseHost = URI(responseOrigin).host.lowercase(Locale.ROOT)
+        return responseOrigin.takeIf {
+            site.hostMatchers.any { matcher -> matcher.matches(responseHost) }
+        }
     }
 
     private fun parseNamedEntry(line: String): Pair<String, String>? {

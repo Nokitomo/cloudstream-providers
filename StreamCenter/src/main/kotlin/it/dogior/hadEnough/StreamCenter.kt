@@ -134,6 +134,8 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import it.dogior.hadEnough.shared.PastebinDomainResolver
 import it.dogior.hadEnough.shared.PastebinSite
+import it.dogior.hadEnough.shared.StreamingCommunityMirrorCandidate
+import it.dogior.hadEnough.shared.StreamingCommunityMirrorResolver
 
 class StreamCenter internal constructor(
     private val sharedPref: SharedPreferences? = null,
@@ -4396,6 +4398,45 @@ class StreamCenter internal constructor(
             StreamCenterPlugin.PREF_SOURCE_ANIMESATURN -> PastebinSite.ANIME_SATURN
             StreamCenterPlugin.PREF_SOURCE_STREAMINGCOMMUNITY -> PastebinSite.STREAMING_COMMUNITY
             else -> null
+        }
+        if (prefKey == StreamCenterPlugin.PREF_SOURCE_STREAMINGCOMMUNITY) {
+            val previousUrl = resolvedSourceUrls[prefKey] ?: configuredUrl
+            val streamingCommunityUrl = PastebinDomainResolver.resolve(
+                preferences = sharedPref,
+                site = PastebinSite.STREAMING_COMMUNITY,
+                configuredFallback = configuredUrl,
+                preferLastGoodForUnchangedCandidate = false,
+            )
+            val streamingUnityUrl = PastebinDomainResolver.resolve(
+                preferences = sharedPref,
+                site = PastebinSite.STREAMING_UNITY,
+                configuredFallback = PastebinSite.STREAMING_UNITY.fallbackUrl,
+                preferLastGoodForUnchangedCandidate = false,
+            )
+            val resolvedUrl = StreamingCommunityMirrorResolver.resolve(
+                preferences = sharedPref,
+                cacheKey = "streamcenter_streamingcommunity_primary",
+                candidates = listOf(
+                    StreamingCommunityMirrorCandidate(PastebinSite.STREAMING_COMMUNITY, streamingCommunityUrl),
+                    StreamingCommunityMirrorCandidate(PastebinSite.STREAMING_UNITY, streamingUnityUrl),
+                    StreamingCommunityMirrorCandidate(
+                        PastebinSite.STREAMING_COMMUNITY,
+                        PastebinSite.STREAMING_COMMUNITY.fallbackUrl,
+                    ),
+                    StreamingCommunityMirrorCandidate(
+                        PastebinSite.STREAMING_UNITY,
+                        PastebinSite.STREAMING_UNITY.fallbackUrl,
+                    ),
+                ),
+            )
+            resolvedSourceUrls[prefKey] = resolvedUrl
+            if (!hostOf(previousUrl).equals(hostOf(resolvedUrl), ignoreCase = true)) {
+                resetSourceSessionsForAll(prefKey)
+            }
+            if (resolvedUrl != configuredUrl) {
+                StreamCenterPlugin.setSourceBaseUrl(sharedPref, prefKey, resolvedUrl)
+            }
+            return
         }
         val previousUrl = resolvedSourceUrls[prefKey] ?: configuredUrl
         val remoteUrl = site?.let {

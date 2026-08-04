@@ -160,7 +160,7 @@ class StreamCenterPlugin : Plugin() {
         const val DEFAULT_URL_ANIMEUNITY = "https://www.animeunity.so"
         const val DEFAULT_URL_ANIMEWORLD = "https://www.animeworld.ac"
         const val DEFAULT_URL_ANIMESATURN = "https://www.animesaturn.net"
-        const val DEFAULT_URL_STREAMINGCOMMUNITY = "https://streamingcommunityz.support"
+        const val DEFAULT_URL_STREAMINGCOMMUNITY = "https://streamingcommunityz.recipes"
         const val DEFAULT_URL_VIXCLOUD = "https://vixcloud.co"
         const val DEFAULT_URL_VIXSRC = "https://vixsrc.to"
         const val DEFAULT_URL_VIDXGO = "https://v.vidxgo.co"
