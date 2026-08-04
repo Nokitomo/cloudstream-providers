@@ -35,6 +35,7 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import it.dogior.hadEnough.shared.PastebinDomainRegistry
 import it.dogior.hadEnough.shared.PastebinDomainResolver
 import it.dogior.hadEnough.shared.PastebinSite
+import it.dogior.hadEnough.shared.ProviderRedirectResolver
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.jsoup.nodes.Element
 import java.text.Normalizer
@@ -59,11 +60,16 @@ class AnimeUnity(
             ?.takeIf(AnimeUnityPlugin::isValidSiteUrl)
             ?.let(AnimeUnityPlugin::getValidatedSiteUrl)
             ?.removeSuffix("/")
-        val resolved = manualUrl ?: PastebinDomainResolver.resolve(
+        val candidate = manualUrl ?: PastebinDomainResolver.resolve(
                 preferences = sharedPref,
                 site = PastebinSite.ANIME_UNITY,
                 configuredFallback = AnimeUnityPlugin.DEFAULT_SITE_URL,
             )
+        val resolved = ProviderRedirectResolver.resolve(
+            preferences = sharedPref,
+            site = PastebinSite.ANIME_UNITY,
+            initialUrl = candidate,
+        )
         if (resolved != mainUrl) {
             mainUrl = resolved
             resetHeadersAndCookies()
