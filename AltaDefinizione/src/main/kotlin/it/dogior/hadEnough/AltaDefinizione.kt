@@ -1,5 +1,6 @@
 package it.dogior.hadEnough
 
+import android.content.SharedPreferences
 import com.lagradost.api.Log
 import com.lagradost.cloudstream3.Episode
 import com.lagradost.cloudstream3.HomePageList
@@ -23,13 +24,30 @@ import okhttp3.FormBody
 import org.json.JSONObject
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
+import it.dogior.hadEnough.shared.PastebinDomainRegistry
+import it.dogior.hadEnough.shared.PastebinDomainResolver
+import it.dogior.hadEnough.shared.PastebinSite
 
-class AltaDefinizione : MainAPI() {
+class AltaDefinizione(
+    private val remoteDomainPreferences: SharedPreferences? = null,
+) : MainAPI() {
     override var mainUrl = "https://altadefinizione.autos"
     override var name = "AltaDefinizione"
     override val supportedTypes = setOf(TvType.Movie, TvType.TvSeries, TvType.Documentary)
     override var lang = "it"
     override val hasMainPage = true
+
+    private suspend fun ensureRemoteDomain() {
+        mainUrl = PastebinDomainResolver.resolve(
+            preferences = remoteDomainPreferences,
+            site = PastebinSite.ALTA_DEFINIZIONE,
+            configuredFallback = mainUrl,
+        )
+    }
+
+    private fun rebaseProviderUrl(url: String): String {
+        return PastebinDomainRegistry.rebaseUrl(url, PastebinSite.ALTA_DEFINIZIONE, mainUrl)
+    }
 
     override val mainPage = mainPageOf(
         "$mainUrl/film/" to "Ultimi Aggiunti",
@@ -60,7 +78,8 @@ class AltaDefinizione : MainAPI() {
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val url = "${request.data}page/$page/"
+        ensureRemoteDomain()
+        val url = "${rebaseProviderUrl(request.data)}page/$page/"
         val doc = app.get(url).document
         val items = doc.select("#dle-content > div > div.movie").mapNotNull {
             it.toSearchResponse()
@@ -88,6 +107,7 @@ class AltaDefinizione : MainAPI() {
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
+        ensureRemoteDomain()
         val requestBody = FormBody.Builder()
             .addEncoded("story", query)
             .addEncoded("do", "search")
@@ -111,7 +131,9 @@ class AltaDefinizione : MainAPI() {
     }
 
     override suspend fun load(url: String): LoadResponse? {
-        val doc = app.get(url).document
+        ensureRemoteDomain()
+        val currentUrl = rebaseProviderUrl(url)
+        val doc = app.get(currentUrl).document
         val content = doc.selectFirst("#movie-details") ?: return null
         val title = content.select("h1.movie_entry-title").text().ifEmpty { "Sconosciuto" }
         val poster = fixUrlNull(content.selectFirst("img")?.attr("data-src"))
@@ -126,9 +148,9 @@ class AltaDefinizione : MainAPI() {
         val genres = genreElements.select("a").map { it.text() }
         val yearElements = details.toList().first { it.text().contains("Anno: ") }
         val year = yearElements.select("div").last()?.text()
-        return if (url.contains("/serie-tv/")) {
+        return if (currentUrl.contains("/serie-tv/")) {
             val episodes = getEpisodes(doc, poster)
-            newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodes) {
+            newTvSeriesLoadResponse(title, currentUrl, TvType.TvSeries, episodes) {
                 this.posterUrl = poster
                 this.plot = plot
                 this.tags = genres
@@ -149,7 +171,7 @@ class AltaDefinizione : MainAPI() {
             } else {
                 emptyList()
             }
-            newMovieLoadResponse(title, url, TvType.Movie, link) {
+            newMovieLoadResponse(title, currentUrl, TvType.Movie, link) {
                 this.posterUrl = poster
                 this.plot = plot
                 this.tags = genres
@@ -183,6 +205,7 @@ class AltaDefinizione : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit,
     ): Boolean {
+        ensureRemoteDomain()
         Log.d("Altadefinizione", "Links: $data")
         val links = parseJson<List<String>>(data)
         links.map {

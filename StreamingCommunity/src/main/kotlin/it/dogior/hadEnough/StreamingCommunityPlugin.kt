@@ -2,9 +2,9 @@ package it.dogior.hadEnough
 
 import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
-import com.lagradost.cloudstream3.CommonActivity.activity
 import com.lagradost.cloudstream3.plugins.CloudstreamPlugin
 import com.lagradost.cloudstream3.plugins.Plugin
+import it.dogior.hadEnough.shared.PastebinDomainResolver
 
 @CloudstreamPlugin
 class StreamingCommunityPlugin : Plugin() {
@@ -15,10 +15,14 @@ class StreamingCommunityPlugin : Plugin() {
         const val PREF_SHOW_UPCOMING = "showUpcoming"
     }
 
-    private val sharedPref =
-        activity?.getSharedPreferences("StreamingCommunity", Context.MODE_PRIVATE)
+    private var sharedPref: android.content.SharedPreferences? = null
 
     override fun load(context: Context) {
+        sharedPref = context.getSharedPreferences("StreamingCommunity", Context.MODE_PRIVATE)
+        val remoteDomainPreferences = context.getSharedPreferences(
+            PastebinDomainResolver.PREFERENCES_NAME,
+            Context.MODE_PRIVATE,
+        )
         val lang = sharedPref?.getString(PREF_LANG, "it") ?: "it"
         val baseUrl = sharedPref?.getString(PREF_BASE_URL, null)
         val showUpcoming = sharedPref?.getBoolean(PREF_SHOW_UPCOMING, true) ?: true
@@ -27,7 +31,8 @@ class StreamingCommunityPlugin : Plugin() {
             StreamingCommunity(
                 lang,
                 customBaseUrl = baseUrl,
-                showUpcoming = showUpcoming
+                showUpcoming = showUpcoming,
+                remoteDomainPreferences = remoteDomainPreferences,
             )
         )
         registerExtractorAPI(VixCloudExtractor())

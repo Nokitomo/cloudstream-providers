@@ -1,8 +1,10 @@
 package it.dogior.hadEnough
 
+import android.content.SharedPreferences
 import com.lagradost.cloudstream3.*
 
-class AnimeWorldDub(isSplit: Boolean) : AnimeWorldCore(isSplit, currentExtension = CurrentExtension.DUB) {
+class AnimeWorldDub(isSplit: Boolean, remoteDomainPreferences: SharedPreferences? = null) :
+    AnimeWorldCore(isSplit, CurrentExtension.DUB, remoteDomainPreferences) {
     override var name = "AnimeWorld Dub"
     override var lang = "it"
 

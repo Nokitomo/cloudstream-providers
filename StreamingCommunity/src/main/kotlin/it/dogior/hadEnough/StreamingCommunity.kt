@@ -1,5 +1,6 @@
 package it.dogior.hadEnough
 
+import android.content.SharedPreferences
 import com.lagradost.api.Log
 import com.lagradost.cloudstream3.APIHolder.capitalize
 import com.lagradost.cloudstream3.Episode
@@ -34,15 +35,21 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
+import it.dogior.hadEnough.shared.PastebinDomainRegistry
+import it.dogior.hadEnough.shared.PastebinDomainResolver
+import it.dogior.hadEnough.shared.PastebinSite
 
 class StreamingCommunity(
     override var lang: String = "it",
     customBaseUrl: String? = null,
-    val showUpcoming: Boolean = true
+    val showUpcoming: Boolean = true,
+    private val remoteDomainPreferences: SharedPreferences? = null,
 ) : MainAPI() {
-    private val siteRootUrl = resolveBaseUrl(customBaseUrl)
-    private val siteHost = siteRootUrl.toHttpUrl().host
-    private val fallbackCdnHost = resolveCdnHost(siteHost)
+    private val configuredBaseUrl = resolveBaseUrl(customBaseUrl)
+    private val hasManualBaseUrl = normalizeBaseUrl(customBaseUrl) != null
+    private var siteRootUrl = configuredBaseUrl
+    private var siteHost = siteRootUrl.toHttpUrl().host
+    private var fallbackCdnHost = resolveCdnHost(siteHost)
     private var cdnBaseUrl = "https://$fallbackCdnHost"
     private var inertiaVersion = ""
     private var decodedXsrfToken = ""
@@ -58,6 +65,44 @@ class StreamingCommunity(
     override var supportedTypes =
         setOf(TvType.Movie, TvType.TvSeries, TvType.Cartoon, TvType.Documentary)
     override val hasMainPage = true
+
+    private suspend fun ensureRemoteDomain() {
+        val resolvedRoot = if (hasManualBaseUrl) {
+            configuredBaseUrl
+        } else {
+            resolveBaseUrl(PastebinDomainResolver.resolve(
+                preferences = remoteDomainPreferences,
+                site = PastebinSite.STREAMING_UNITY,
+                configuredFallback = configuredBaseUrl,
+            ))
+        }
+        if (resolvedRoot != siteRootUrl) {
+            siteRootUrl = resolvedRoot
+            siteHost = siteRootUrl.toHttpUrl().host
+            fallbackCdnHost = resolveCdnHost(siteHost)
+            cdnBaseUrl = "https://$fallbackCdnHost"
+            mainUrl = siteRootUrl + lang
+            resetSession()
+        }
+    }
+
+    private fun resetSession() {
+        inertiaVersion = ""
+        decodedXsrfToken = ""
+        headers.clear()
+        headers.putAll(
+            mapOf(
+                "Cookie" to "",
+                "X-Inertia" to true.toString(),
+                "X-Inertia-Version" to "",
+                "X-Requested-With" to "XMLHttpRequest",
+            ),
+        )
+    }
+
+    private fun rebaseProviderUrl(url: String): String {
+        return PastebinDomainRegistry.rebaseUrl(url, PastebinSite.STREAMING_UNITY, siteRootUrl)
+    }
 
     companion object {
         const val DEFAULT_BASE_URL = "https://streamingunity.cc/"
@@ -265,6 +310,7 @@ class StreamingCommunity(
     }
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse? {
+        ensureRemoteDomain()
         if (!showUpcoming &&
             request.data == SliderFetchRequestSlider(
                 name = "upcoming",
@@ -340,6 +386,7 @@ class StreamingCommunity(
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
+        ensureRemoteDomain()
         val url = "$mainUrl/search"
         val response = app.get(url, params = mapOf("q" to query)).body.string()
         val titles = parseBrowseTitles(response, "Search")
@@ -347,6 +394,7 @@ class StreamingCommunity(
     }
 
     override suspend fun search(query: String, page: Int): SearchResponseList {
+        ensureRemoteDomain()
         val params = mutableMapOf("q" to query)
         if (page > 1) params["page"] = page.toString()
         val response = app.get("$mainUrl/search", params = params).body.string()
@@ -372,7 +420,8 @@ class StreamingCommunity(
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val actualUrl = getActualUrl(url)
+        ensureRemoteDomain()
+        val actualUrl = getActualUrl(rebaseProviderUrl(url))
         if (headers["Cookie"].isNullOrEmpty()) {
             setupHeaders()
         }
@@ -553,13 +602,15 @@ class StreamingCommunity(
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
+        ensureRemoteDomain()
 //        Log.d(TAG, "Load Data : $data")
         if (data.isEmpty()) return false
         val loadData = parseJson<LoadData>(data)
 
-        val responseBody = app.get(loadData.url).body.string()
-        val iframeSrc = StreamingCommunityEmbedResolver.resolveIframeUrl(responseBody, loadData.url)
-            ?: StreamingCommunityEmbedResolver.resolveEmbedUrl(responseBody, loadData.url)?.let { embedUrl ->
+        val currentLoadUrl = rebaseProviderUrl(loadData.url)
+        val responseBody = app.get(currentLoadUrl).body.string()
+        val iframeSrc = StreamingCommunityEmbedResolver.resolveIframeUrl(responseBody, currentLoadUrl)
+            ?: StreamingCommunityEmbedResolver.resolveEmbedUrl(responseBody, currentLoadUrl)?.let { embedUrl ->
                 StreamingCommunityEmbedResolver.resolveIframeUrl(app.get(embedUrl).body.string(), embedUrl)
             }
             ?: return false

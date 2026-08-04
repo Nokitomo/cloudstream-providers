@@ -45,6 +45,8 @@ fun Project.android(configuration: LibraryExtension.() -> Unit) {
 }
 
 subprojects {
+    val sharedKotlinSources = rootProject.file("shared/src/main/kotlin")
+
     apply(plugin = "com.android.library")
 //    apply(plugin = "kotlin-android")
     apply(plugin = "com.lagradost.cloudstream3.gradle")
@@ -58,6 +60,11 @@ subprojects {
     android {
         namespace = "it.dogior.hadEnough"
         compileSdk = 36
+
+        sourceSets.getByName("main").apply {
+            java.srcDir(sharedKotlinSources)
+            kotlin.srcDir(sharedKotlinSources)
+        }
 
         defaultConfig {
             minSdk = 21

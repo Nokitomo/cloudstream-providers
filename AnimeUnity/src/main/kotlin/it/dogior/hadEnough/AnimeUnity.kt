@@ -32,6 +32,9 @@ import com.lagradost.cloudstream3.newEpisode
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.utils.AppUtils.parseJson
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import it.dogior.hadEnough.shared.PastebinDomainRegistry
+import it.dogior.hadEnough.shared.PastebinDomainResolver
+import it.dogior.hadEnough.shared.PastebinSite
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.jsoup.nodes.Element
 import java.text.Normalizer
@@ -46,14 +49,30 @@ class AnimeUnity(
     private val sharedPref: SharedPreferences?,
 ) : MainAPI() {
     override var mainUrl = AnimeUnityPlugin.getConfiguredBaseUrl(sharedPref)
-        get() = AnimeUnityPlugin.getConfiguredBaseUrl(sharedPref)
-        set(value) {
-            field = value
-        }
     override var name = Companion.name
     override var supportedTypes = setOf(TvType.Anime, TvType.AnimeMovie, TvType.OVA)
     override var lang = "it"
     override val hasMainPage = true
+
+    private suspend fun ensureRemoteDomain() {
+        val manualUrl = sharedPref?.getString(AnimeUnityPlugin.PREF_SITE_URL, null)
+            ?.takeIf(AnimeUnityPlugin::isValidSiteUrl)
+            ?.let(AnimeUnityPlugin::getValidatedSiteUrl)
+            ?.removeSuffix("/")
+        val resolved = manualUrl ?: PastebinDomainResolver.resolve(
+                preferences = sharedPref,
+                site = PastebinSite.ANIME_UNITY,
+                configuredFallback = AnimeUnityPlugin.DEFAULT_SITE_URL,
+            )
+        if (resolved != mainUrl) {
+            mainUrl = resolved
+            resetHeadersAndCookies()
+        }
+    }
+
+    private fun rebaseAnimeUnityUrl(url: String): String {
+        return PastebinDomainRegistry.rebaseUrl(url, PastebinSite.ANIME_UNITY, mainUrl)
+    }
 
     companion object {
         @Suppress("ConstPropertyName")
@@ -931,7 +950,11 @@ class AnimeUnity(
     }
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val sectionData = decodeMainPageSectionData(request.data)
+        ensureRemoteDomain()
+        val decodedSectionData = decodeMainPageSectionData(request.data)
+        val sectionData = decodedSectionData.copy(
+            baseUrl = rebaseAnimeUnityUrl(decodedSectionData.baseUrl),
+        )
 
         if (sectionData.key == "latest") {
             return getLatestEpisodesMainPage(page, request.name)
@@ -1100,6 +1123,7 @@ class AnimeUnity(
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
+        ensureRemoteDomain()
         val url = "$mainUrl/archivio/get-animes"
         ensureHeadersAndCookies(forceReset = true)
 
@@ -1113,8 +1137,9 @@ class AnimeUnity(
     }
 
     override suspend fun load(url: String): LoadResponse {
+        ensureRemoteDomain()
         ensureHeadersAndCookies(forceReset = true)
-        val animePage = app.get(url).document
+        val animePage = app.get(rebaseAnimeUnityUrl(url)).document
         val currentPageData = parseAnimePageData(animePage)
         val currentAnime = currentPageData.anime
         val shouldMergeVariants = shouldUseUnifiedDubSubCards()
@@ -1262,6 +1287,7 @@ class AnimeUnity(
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit,
     ): Boolean {
+        ensureRemoteDomain()
         val playbackData = runCatching { parseJson<EpisodePlaybackData>(data) }.getOrNull()
         val playerSources = playbackData?.let(::buildPlayerSourceOptions)
             ?.takeIf { it.isNotEmpty() }
@@ -1270,7 +1296,7 @@ class AnimeUnity(
         val shouldLabelSources = playerSources.size > 1
 
         playerSources.forEach { playerSource ->
-            val document = app.get(playerSource.url).document
+            val document = app.get(rebaseAnimeUnityUrl(playerSource.url)).document
             val sourceUrl = document.select("video-player").attr("embed_url")
             if (sourceUrl.isBlank()) return@forEach
 

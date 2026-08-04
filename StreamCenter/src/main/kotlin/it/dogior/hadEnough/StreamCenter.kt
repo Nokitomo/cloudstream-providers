@@ -132,6 +132,8 @@ import java.util.Locale
 import java.util.WeakHashMap
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
+import it.dogior.hadEnough.shared.PastebinDomainResolver
+import it.dogior.hadEnough.shared.PastebinSite
 
 class StreamCenter internal constructor(
     private val sharedPref: SharedPreferences? = null,
@@ -186,18 +188,21 @@ class StreamCenter internal constructor(
     private val scHomePath = "/sc/"
     private val trackingHomePath = "/tracking/"
     private val scHomeTypeParam = "streamcenter_sc_type"
+    private fun effectiveSourceUrl(prefKey: String, fallback: String): String {
+        return resolvedSourceUrls[prefKey]
+            ?: StreamCenterPlugin.getSourceBaseUrl(sharedPref, prefKey).ifBlank { fallback }
+    }
     private val animeUnityUrl: String
-        get() = StreamCenterPlugin.getSourceBaseUrl(sharedPref, StreamCenterPlugin.PREF_SOURCE_ANIMEUNITY)
-            .ifBlank { StreamCenterPlugin.DEFAULT_URL_ANIMEUNITY }
+        get() = effectiveSourceUrl(StreamCenterPlugin.PREF_SOURCE_ANIMEUNITY, StreamCenterPlugin.DEFAULT_URL_ANIMEUNITY)
     private val animeWorldUrl: String
-        get() = StreamCenterPlugin.getSourceBaseUrl(sharedPref, StreamCenterPlugin.PREF_SOURCE_ANIMEWORLD)
-            .ifBlank { StreamCenterPlugin.DEFAULT_URL_ANIMEWORLD }
+        get() = effectiveSourceUrl(StreamCenterPlugin.PREF_SOURCE_ANIMEWORLD, StreamCenterPlugin.DEFAULT_URL_ANIMEWORLD)
     private val animeSaturnUrl: String
-        get() = StreamCenterPlugin.getSourceBaseUrl(sharedPref, StreamCenterPlugin.PREF_SOURCE_ANIMESATURN)
-            .ifBlank { StreamCenterPlugin.DEFAULT_URL_ANIMESATURN }
+        get() = effectiveSourceUrl(StreamCenterPlugin.PREF_SOURCE_ANIMESATURN, StreamCenterPlugin.DEFAULT_URL_ANIMESATURN)
     private val streamingCommunityRootUrl: String
-        get() = StreamCenterPlugin.getSourceBaseUrl(sharedPref, StreamCenterPlugin.PREF_SOURCE_STREAMINGCOMMUNITY)
-            .ifBlank { StreamCenterPlugin.DEFAULT_URL_STREAMINGCOMMUNITY } + "/"
+        get() = effectiveSourceUrl(
+            StreamCenterPlugin.PREF_SOURCE_STREAMINGCOMMUNITY,
+            StreamCenterPlugin.DEFAULT_URL_STREAMINGCOMMUNITY,
+        ).trimEnd('/') + "/"
 
     private val streamingCommunityMainUrl: String
         get() = "${streamingCommunityRootUrl}it"
@@ -4383,28 +4388,56 @@ class StreamCenter internal constructor(
 
     private suspend fun ensureUpdatedSourceDomain(prefKey: String) {
         if (!StreamCenterPlugin.isSourceUrlAutoUpdateEnabled(sharedPref)) return
+        val configuredUrl = StreamCenterPlugin.getSourceBaseUrl(sharedPref, prefKey)
+        if (configuredUrl.isBlank()) return
+        val site = when (prefKey) {
+            StreamCenterPlugin.PREF_SOURCE_ANIMEUNITY -> PastebinSite.ANIME_UNITY
+            StreamCenterPlugin.PREF_SOURCE_ANIMEWORLD -> PastebinSite.ANIME_WORLD
+            StreamCenterPlugin.PREF_SOURCE_ANIMESATURN -> PastebinSite.ANIME_SATURN
+            StreamCenterPlugin.PREF_SOURCE_STREAMINGCOMMUNITY -> PastebinSite.STREAMING_COMMUNITY
+            else -> null
+        }
+        val previousUrl = resolvedSourceUrls[prefKey] ?: configuredUrl
+        val remoteUrl = site?.let {
+            PastebinDomainResolver.resolve(sharedPref, it, configuredUrl)
+        } ?: configuredUrl
+        resolvedSourceUrls[prefKey] = remoteUrl
+        if (!hostOf(previousUrl).equals(hostOf(remoteUrl), ignoreCase = true)) {
+            synchronized(checkedSourceDomains) { checkedSourceDomains.remove(prefKey) }
+            resetSourceSessionsForAll(prefKey)
+        }
         synchronized(checkedSourceDomains) {
             if (!checkedSourceDomains.add(prefKey)) return
         }
         val result = runCatching {
-            val baseUrl = StreamCenterPlugin.getSourceBaseUrl(sharedPref, prefKey)
-            if (baseUrl.isBlank()) return@runCatching false
-            val response = app.get(baseUrl, headers = headers, timeout = 15L)
+            var usedBaseUrl = remoteUrl
+            val response = runCatching {
+                app.get(remoteUrl, headers = headers, timeout = 15L)
+            }.getOrElse { remoteFailure ->
+                if (remoteUrl == configuredUrl) throw remoteFailure
+                usedBaseUrl = configuredUrl
+                resolvedSourceUrls[prefKey] = configuredUrl
+                resetSourceSessionsForAll(prefKey)
+                app.get(configuredUrl, headers = headers, timeout = 15L)
+            }
             val finalUrl = response.url
             val newHost = hostOf(finalUrl)
             val moved = response.code in 200..299 &&
                 finalUrl.startsWith("http") &&
                 newHost.isNotBlank() &&
-                !newHost.equals(hostOf(baseUrl), ignoreCase = true)
+                !newHost.equals(hostOf(usedBaseUrl), ignoreCase = true)
             if (moved) {
                 val scheme = finalUrl.substringBefore("://")
-                StreamCenterPlugin.setSourceBaseUrl(sharedPref, prefKey, "$scheme://$newHost")
+                val finalBaseUrl = "$scheme://$newHost"
+                resolvedSourceUrls[prefKey] = finalBaseUrl
+                StreamCenterPlugin.setSourceBaseUrl(sharedPref, prefKey, finalBaseUrl)
+                site?.let { PastebinDomainResolver.rememberWorkingUrl(sharedPref, it, finalBaseUrl) }
             }
-            moved
+            moved || usedBaseUrl != configuredUrl
         }
         when {
             result.isFailure -> synchronized(checkedSourceDomains) { checkedSourceDomains.remove(prefKey) }
-            result.getOrDefault(false) -> resetSourceSession(prefKey)
+            result.getOrDefault(false) -> resetSourceSessionsForAll(prefKey)
         }
     }
 
@@ -7386,12 +7419,19 @@ class StreamCenter internal constructor(
             SyncIdName.Simkl,
         )
         private val checkedSourceDomains = mutableSetOf<String>()
+        private val resolvedSourceUrls = ConcurrentHashMap<String, String>()
         private val activeInstances = Collections.newSetFromMap(
             WeakHashMap<StreamCenter, Boolean>(),
         )
 
+        private fun resetSourceSessionsForAll(prefKey: String) {
+            val instances = synchronized(activeInstances) { activeInstances.toList() }
+            instances.forEach { it.resetSourceSession(prefKey) }
+        }
+
         fun resetSourceDomainChecks() {
             synchronized(checkedSourceDomains) { checkedSourceDomains.clear() }
+            resolvedSourceUrls.clear()
         }
 
         fun resetRuntimeConfiguration() {

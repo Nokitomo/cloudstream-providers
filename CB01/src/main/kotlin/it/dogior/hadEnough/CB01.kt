@@ -1,5 +1,6 @@
 package it.dogior.hadEnough
 
+import android.content.SharedPreferences
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.lagradost.api.Log
 import com.lagradost.cloudstream3.Episode
@@ -41,14 +42,29 @@ import org.json.JSONException
 import org.json.JSONObject
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
+import it.dogior.hadEnough.shared.PastebinDomainRegistry
+import it.dogior.hadEnough.shared.PastebinDomainResolver
+import it.dogior.hadEnough.shared.PastebinSite
 
-class CB01 : MainAPI() {
+class CB01(private val remoteDomainPreferences: SharedPreferences? = null) : MainAPI() {
     override var mainUrl = "https://cb01uno.uno"
     override var name = "CB01"
     override val supportedTypes = setOf(TvType.Movie, TvType.TvSeries, TvType.Cartoon)
     override var lang = "it"
     override val hasMainPage = true
     override var sequentialMainPage = true
+
+    private suspend fun ensureRemoteDomain() {
+        mainUrl = PastebinDomainResolver.resolve(
+            remoteDomainPreferences,
+            PastebinSite.CB01,
+            mainUrl,
+        )
+    }
+
+    private fun rebaseProviderUrl(url: String): String {
+        return PastebinDomainRegistry.rebaseUrl(url, PastebinSite.CB01, mainUrl)
+    }
 
     override val mainPage = mainPageOf(
         mainUrl to "Film",
@@ -70,7 +86,9 @@ class CB01 : MainAPI() {
     }
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse? {
-        val url = if (page > 1) "${request.data}/page/$page/" else request.data
+        ensureRemoteDomain()
+        val currentData = rebaseProviderUrl(request.data)
+        val url = if (page > 1) "$currentData/page/$page/" else currentData
         val response = app.get(url)
 
         if (actualMainUrl.isEmpty()) {
@@ -120,6 +138,7 @@ class CB01 : MainAPI() {
 
     // this function gets called when you search for something
     override suspend fun search(query: String): List<SearchResponse> {
+        ensureRemoteDomain()
         val searchLinks =
             listOf("$mainUrl/?s=$query", "$mainUrl/serietv/?s=$query")
         val results = searchLinks.amap { link ->
@@ -161,8 +180,10 @@ class CB01 : MainAPI() {
     }
 
     override suspend fun load(url: String): LoadResponse? {
+        ensureRemoteDomain()
+        val currentUrl = rebaseProviderUrl(url)
         val document =
-            app.get(url).document
+            app.get(currentUrl).document
         val mainContainer = document.selectFirst(".sequex-main-container")
         if (mainContainer == null) {
             Log.d("CB01", document.toString())
@@ -173,7 +194,7 @@ class CB01 : MainAPI() {
         val banner = mainContainer.selectFirst("#sequex-page-title-img")?.attr("data-img")
         val title = mainContainer.selectFirst("h1")?.text()!!
 //        val actionTable = mainContainer.selectFirst("table.cbtable:nth-child(5)")
-        val isMovie = !url.contains("serietv")
+        val isMovie = !currentUrl.contains("serietv")
         val type = if (isMovie) TvType.Movie else TvType.TvSeries
         return if (isMovie) {
             val year = Regex("\\d{4}").find(title)?.value?.toIntOrNull()
@@ -200,7 +221,7 @@ class CB01 : MainAPI() {
                 it.subList(links.size - 2, it.size)
             }?.toJson() ?: "null"
 
-            newMovieLoadResponse(fixTitle(title, true), url, type, data) {
+            newMovieLoadResponse(fixTitle(title, true), currentUrl, type, data) {
                 addPoster(poster)
                 this.plot = plot
                 this.backgroundPosterUrl = banner
@@ -216,7 +237,7 @@ class CB01 : MainAPI() {
             val plot = description?.last()?.trim()
             val tags = description?.first()?.split('/')
             val (episodes, seasons) = getEpisodes(document)
-            newTvSeriesLoadResponse(fixTitle(title, false), url, type, episodes) {
+            newTvSeriesLoadResponse(fixTitle(title, false), currentUrl, type, episodes) {
                 addPoster(poster)
                 addSeasonNames(seasons)
                 this.plot = plot
@@ -327,6 +348,7 @@ class CB01 : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit,
     ): Boolean {
+        ensureRemoteDomain()
 //        Log.d("CB01 - LoadLinks", "Data: $data")
         if (data == "null") return false
         var links = parseJson<List<String>>(data)

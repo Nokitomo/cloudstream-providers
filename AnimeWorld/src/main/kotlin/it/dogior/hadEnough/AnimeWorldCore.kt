@@ -1,5 +1,6 @@
 package it.dogior.hadEnough
 
+import android.content.SharedPreferences
 import com.lagradost.cloudstream3.AnimeSearchResponse
 import com.lagradost.cloudstream3.DubStatus
 import com.lagradost.cloudstream3.ErrorLoadingException
@@ -41,15 +42,41 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.jsoup.nodes.Element
 import java.text.SimpleDateFormat
 import java.util.Locale
+import it.dogior.hadEnough.shared.PastebinDomainRegistry
+import it.dogior.hadEnough.shared.PastebinDomainResolver
+import it.dogior.hadEnough.shared.PastebinSite
 
-open class AnimeWorldCore(isSplit: Boolean = false, val currentExtension: CurrentExtension = CurrentExtension.CORE) : MainAPI() {
-    final override var mainUrl = Companion.mainUrl
+open class AnimeWorldCore(
+    isSplit: Boolean = false,
+    val currentExtension: CurrentExtension = CurrentExtension.CORE,
+    private val remoteDomainPreferences: SharedPreferences? = null,
+) : MainAPI() {
+    final override var mainUrl = PastebinSite.ANIME_WORLD.fallbackUrl
     override var name = "AnimeWorld"
     override var lang = "it"
     override val hasMainPage = true
     override val hasQuickSearch = true
     override var sequentialMainPage = true
     val dubFilter = getDubFilter(currentExtension)
+    private var cookies = mutableMapOf<String, String>()
+    private var headers = mutableMapOf<String, String>()
+
+    private suspend fun ensureRemoteDomain() {
+        val resolved = PastebinDomainResolver.resolve(
+            preferences = remoteDomainPreferences,
+            site = PastebinSite.ANIME_WORLD,
+            configuredFallback = mainUrl,
+        )
+        if (resolved != mainUrl) {
+            mainUrl = resolved
+            cookies.clear()
+            headers.clear()
+        }
+    }
+
+    private fun rebaseProviderUrl(url: String): String {
+        return PastebinDomainRegistry.rebaseUrl(url, PastebinSite.ANIME_WORLD, mainUrl)
+    }
 
     override val mainPage = if (isSplit) {
         emptyList()
@@ -68,10 +95,6 @@ open class AnimeWorldCore(isSplit: Boolean = false, val currentExtension: Curren
     )
 
     companion object {
-        private var mainUrl = "https://www.animeworld.ac"
-        private var cookies = mutableMapOf<String, String>()
-        private var headers = mutableMapOf<String, String>()
-
         private fun getDubFilter(currentExtension: CurrentExtension): DubStatus? {
             return when (currentExtension) {
                 CurrentExtension.DUB -> {
@@ -88,26 +111,21 @@ open class AnimeWorldCore(isSplit: Boolean = false, val currentExtension: Curren
             }
         }
 
-        private suspend fun request(url: String): NiceResponse {
-            if (!headers.contains("Cookie")) {
-                val cookie = getSecurityCookie()
-                if (cookie != null) {
-                    headers["Cookie"] = cookie
-                }
-//                Log.d("AnimeWorld:Headers", "headers: $headers")
-            }
-            return app.get(url, headers = headers)
-        }
+    }
 
-        private suspend fun getSecurityCookie(): String? {
-            val r = app.get(mainUrl).document
-            val script = r.selectFirst("script") ?: return null
-            val cookie = script.data()
-                .substringAfter("document.cookie=\"")
-                .substringBefore(";  path")
-//            Log.d("AnimeWorld:getSecurityCookie", "Cookie: $cookie")
-            return cookie
+    private suspend fun request(url: String): NiceResponse {
+        if (!headers.contains("Cookie")) {
+            getSecurityCookie()?.let { headers["Cookie"] = it }
         }
+        return app.get(rebaseProviderUrl(url), headers = headers)
+    }
+
+    private suspend fun getSecurityCookie(): String? {
+        val r = app.get(mainUrl).document
+        val script = r.selectFirst("script") ?: return null
+        return script.data()
+            .substringAfter("document.cookie=\"")
+            .substringBefore(";  path")
     }
 
     private fun getType(t: String?): TvType {
@@ -127,10 +145,12 @@ open class AnimeWorldCore(isSplit: Boolean = false, val currentExtension: Curren
     }
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
+        ensureRemoteDomain()
+        val currentData = rebaseProviderUrl(request.data)
         val pageData: NiceResponse = if (page > 1) {
-            request(request.data + "&page=$page&d=1")
+            request(currentData + "&page=$page&d=1")
         } else {
-            request(request.data + "&d=1")
+            request(currentData + "&d=1")
         }
 //        Log.d("AnimeWorld:MainPage", "Request Headers: ${pageData.okhttpResponse.request.headers}")
 
@@ -220,6 +240,7 @@ open class AnimeWorldCore(isSplit: Boolean = false, val currentExtension: Curren
     }
 
     override suspend fun quickSearch(query: String): List<SearchResponse>? {
+        ensureRemoteDomain()
         val document = app.post(
             "$mainUrl/api/search/v2?keyword=${query}",
             referer = mainUrl,
@@ -252,6 +273,7 @@ open class AnimeWorldCore(isSplit: Boolean = false, val currentExtension: Curren
     }
 
     override suspend fun search(query: String, page: Int): SearchResponseList {
+        ensureRemoteDomain()
         val pageParam = if (page <= 1) "" else "&page=$page"
         val document = request("$mainUrl/filter?sort=0&keyword=${query.trim()}$pageParam").document
 
@@ -282,7 +304,8 @@ open class AnimeWorldCore(isSplit: Boolean = false, val currentExtension: Curren
 //    }
 
     override suspend fun load(url: String): LoadResponse {
-        val actualUrl = url.replace(Regex("""www\.animeworld\..."""), mainUrl.toHttpUrl().host)
+        ensureRemoteDomain()
+        val actualUrl = rebaseProviderUrl(url)
         val document = request(actualUrl).document
 //        Log.d("AnimeWorld:load", "Url: actualUrl")
 
@@ -382,10 +405,11 @@ open class AnimeWorldCore(isSplit: Boolean = false, val currentExtension: Curren
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit,
     ): Boolean {
+        ensureRemoteDomain()
 //        Log.d("AnimeWorld:loadLinks", "DATA : $data")
-        val d = data.substringAfter("$mainUrl/")
-        val epNumber = d.split("¿")[0].toInt()
-        val pageUrl = d.split("¿")[1]
+        val parts = data.split("¿", limit = 2)
+        val epNumber = parts.first().toInt()
+        val pageUrl = rebaseProviderUrl(parts.getOrElse(1) { return false })
 
         val serverElem = request(pageUrl).document.select(".widget.servers")
         val servers = serverElem.select(".widget-body > .server")
