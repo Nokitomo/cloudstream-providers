@@ -9,6 +9,7 @@ import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.LoadResponse.Companion.addAniListId
 import com.lagradost.cloudstream3.LoadResponse.Companion.addDuration
+import com.lagradost.cloudstream3.LoadResponse.Companion.addImdbId
 import com.lagradost.cloudstream3.LoadResponse.Companion.addMalId
 import com.lagradost.cloudstream3.LoadResponse.Companion.addScore
 import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
@@ -45,6 +46,7 @@ import java.util.Locale
 import it.dogior.hadEnough.shared.PastebinDomainRegistry
 import it.dogior.hadEnough.shared.PastebinDomainResolver
 import it.dogior.hadEnough.shared.PastebinSite
+import it.dogior.hadEnough.shared.AnimeTitleLogoResolver
 import it.dogior.hadEnough.shared.ProviderRedirectResolver
 
 open class AnimeWorldCore(
@@ -332,6 +334,11 @@ open class AnimeWorldCore(
             .split('/').last().toIntOrNull()
         val anlId = document.select("#anilist-button").attr("href")
             .split('/').last().toIntOrNull()
+        val titleArtwork = AnimeTitleLogoResolver.resolve(
+            anilistId = anlId,
+            malId = malId,
+            isMovie = type == TvType.AnimeMovie,
+        )
 
         var dub = false
         var year: Int? = null
@@ -387,6 +394,7 @@ open class AnimeWorldCore(
             engName = title
             japName = otherTitle
             addPoster(poster)
+            logoUrl = titleArtwork.logoUrl
             this.year = year
             addEpisodes(if (dub) DubStatus.Dubbed else DubStatus.Subbed, episodes)
             showStatus = status
@@ -394,6 +402,7 @@ open class AnimeWorldCore(
             tags = genres
             addMalId(malId)
             addAniListId(anlId)
+            titleArtwork.imdbId?.let { addImdbId(it) }
             addScore(rating)
             duration?.let { addDuration(duration) }
             addTrailer(trailerUrl)

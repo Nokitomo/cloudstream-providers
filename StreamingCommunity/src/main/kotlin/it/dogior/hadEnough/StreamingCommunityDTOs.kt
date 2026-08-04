@@ -78,6 +78,7 @@ data class TitleTranslation(
 data class PosterImage(
     @JsonProperty("filename") val filename: String? = null,
     @JsonProperty("type") val type: String,
+    @JsonProperty("lang") val lang: String? = null,
     @JsonProperty("imageable_type") val imageableType: String? = null,
     @JsonProperty("imageable_id") val imageableId: Int? = null,
     @JsonProperty("original_url_field") val originalUrlField: String? = null,
@@ -196,6 +197,16 @@ data class TitleProp(
         }
         return null
     }
+    fun getLogoImageId(): String? = selectLogoImage(images)?.value()
+}
+
+internal fun selectLogoImage(images: List<PosterImage>): PosterImage? {
+    val logos = images.filter { it.type.equals("logo", ignoreCase = true) && it.value() != null }
+    return logos.firstOrNull { image ->
+        image.lang?.trim()?.equals("it", ignoreCase = true) == true ||
+            image.lang?.trim()?.startsWith("it-", ignoreCase = true) == true
+    } ?: logos.firstOrNull { it.lang.isNullOrBlank() }
+        ?: logos.firstOrNull()
 }
 
 

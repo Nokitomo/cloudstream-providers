@@ -483,6 +483,7 @@ class StreamingCommunity(
         val related = props.sliders?.getOrNull(0)
         val trailers = title.trailers?.mapNotNull { it.getYoutubeUrl() }
         val poster = getPoster(title)
+        val logo = imageUrl(title.getLogoImageId())
 
         if (title.type == "tv") {
             val episodes: List<Episode> = getEpisodes(props)
@@ -494,6 +495,7 @@ class StreamingCommunity(
                 episodes
             ) {
                 this.posterUrl = poster
+                this.logoUrl = logo
                 title.getBackgroundImageId()
                     .let { this.backgroundPosterUrl = imageUrl(it) }
 
@@ -529,6 +531,7 @@ class StreamingCommunity(
                 dataUrl = data.toJson()
             ) {
                 this.posterUrl = poster
+                this.logoUrl = logo
                 title.getBackgroundImageId()
                     .let { this.backgroundPosterUrl = imageUrl(it) }
 

@@ -5,6 +5,7 @@ import it.dogior.hadEnough.model.AniZipEpisodeMetadata
 import it.dogior.hadEnough.util.cleanText
 import it.dogior.hadEnough.util.optNullableInt
 import it.dogior.hadEnough.util.optNullableString
+import it.dogior.hadEnough.shared.AnimeTitleLogoResolver
 import org.jsoup.Jsoup
 import org.json.JSONObject
 import java.util.Locale
@@ -60,6 +61,9 @@ internal class AniZipMetadataClient(
         val mappedTmdbId = mappings?.optNullableString("themoviedb_id")
             ?.toIntOrNull()
             ?.takeIf { it > 0 }
+        val titleArtwork = AnimeTitleLogoResolver.parseAniZipPayload(text)
+        val mappedImdbId = titleArtwork.imdbId
+        val logoUrl = titleArtwork.logoUrl
         val episodes = linkedMapOf<Int, AniZipEpisodeMetadata>()
 
         root.optJSONObject("episodes")?.let { entries ->
@@ -96,6 +100,8 @@ internal class AniZipMetadataClient(
             malId = mappedMalId,
             kitsuId = mappedKitsuId,
             tmdbId = mappedTmdbId,
+            imdbId = mappedImdbId,
+            logoUrl = logoUrl,
         )
         MetadataLog.info(
             SOURCE,
@@ -108,6 +114,8 @@ internal class AniZipMetadataClient(
                 mappedMalId?.let { put("id_myanimelist_mappato", it) }
                 mappedKitsuId?.let { put("id_kitsu_mappato", it) }
                 mappedTmdbId?.let { put("id_tmdb_mappato", it) }
+                mappedImdbId?.let { put("id_imdb_mappato", it) }
+                logoUrl?.let { put("logo", it) }
             },
         )
         return catalog

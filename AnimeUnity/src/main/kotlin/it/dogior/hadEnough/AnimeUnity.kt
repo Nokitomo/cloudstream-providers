@@ -35,7 +35,10 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import it.dogior.hadEnough.shared.PastebinDomainRegistry
 import it.dogior.hadEnough.shared.PastebinDomainResolver
 import it.dogior.hadEnough.shared.PastebinSite
+import it.dogior.hadEnough.shared.AnimeTitleLogoResolver
+import it.dogior.hadEnough.shared.AnimeTitleArtwork
 import it.dogior.hadEnough.shared.ProviderRedirectResolver
+import kotlinx.coroutines.withTimeoutOrNull
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.jsoup.nodes.Element
 import java.text.Normalizer
@@ -1170,13 +1173,24 @@ class AnimeUnity(
 
         val primaryAnime = subPageData?.anime ?: dubPageData?.anime ?: currentAnime
         val title = getAnimeTitle(primaryAnime)
-        val cinemetaImdbId = runCatching {
-            AnimeUnityCinemetaClient.resolve(
+        val isMovie = primaryAnime.type == "Movie"
+        val titleArtwork = withTimeoutOrNull(15_000L) {
+            val mappedArtwork = AnimeTitleLogoResolver.resolve(
+                anilistId = primaryAnime.anilistId,
+                malId = primaryAnime.malId,
+                isMovie = isMovie,
+            )
+            val fallbackImdbId = mappedArtwork.imdbId ?: AnimeUnityCinemetaClient.resolve(
                 titleCandidates = listOfNotNull(primaryAnime.titleIt, primaryAnime.titleEng, primaryAnime.title),
                 year = primaryAnime.date.toIntOrNull(),
-                isMovie = primaryAnime.type == "Movie",
+                isMovie = isMovie,
             )
-        }.getOrNull()
+            if (mappedArtwork.logoUrl == null && fallbackImdbId != mappedArtwork.imdbId) {
+                AnimeTitleLogoResolver.resolveForImdb(fallbackImdbId, isMovie)
+            } else {
+                mappedArtwork
+            }
+        } ?: AnimeTitleArtwork()
         val relatedAnimes = groupAnimeCards(currentPageData.relatedAnime).amap { entry ->
             val anime = entry.anime
             val relatedTitle = getAnimeTitle(anime)
@@ -1240,6 +1254,7 @@ class AnimeUnity(
             else TvType.OVA,
         ) {
             this.posterUrl = getImage(primaryAnime.imageUrl, primaryAnime.anilistId)
+            this.logoUrl = titleArtwork.logoUrl
             primaryAnime.cover?.let { this.backgroundPosterUrl = getBanner(it) }
             this.year = primaryAnime.date.toIntOrNull()
             addScore(primaryAnime.score)
@@ -1258,7 +1273,7 @@ class AnimeUnity(
             }
             addAniListId(primaryAnime.anilistId)
             addMalId(primaryAnime.malId)
-            cinemetaImdbId?.let { this.addImdbId(it) }
+            titleArtwork.imdbId?.let { this.addImdbId(it) }
             if (trailerUrl != null) {
                 addTrailer(trailerUrl)
             }

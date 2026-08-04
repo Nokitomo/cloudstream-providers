@@ -56,6 +56,7 @@ internal data class StreamCenterStremioCatalogItem(
     val name: String,
     val posterUrl: String? = null,
     val backgroundUrl: String? = null,
+    val logoUrl: String? = null,
     val description: String? = null,
     val year: Int? = null,
     val score: Double? = null,
@@ -732,7 +733,7 @@ internal object StreamCenterStremioAddonClient {
     private fun StreamCenterStremioCatalogDescriptor.requiresExtra(name: String): Boolean =
         requiredExtra.any { it.equals(name, ignoreCase = true) }
 
-    private fun parseCatalogItem(
+    internal fun parseCatalogItem(
         addon: StreamCenterStremioAddon,
         root: JSONObject,
         fallbackType: String,
@@ -788,6 +789,8 @@ internal object StreamCenterStremioAddonClient {
                 ?.let { value -> resolveManifestAssetUrl(addon.manifestUrl, value) },
             backgroundUrl = root.optNonBlank("background", "backgroundUrl", "fanart")
                 ?.let { value -> resolveManifestAssetUrl(addon.manifestUrl, value) },
+            logoUrl = root.optNonBlank("logo", "logoUrl")
+                ?.let { value -> resolveManifestAssetUrl(addon.manifestUrl, value) },
             description = root.optNonBlank("description", "overview"),
             year = YEAR_REGEX.find(root.optNonBlank("releaseInfo", "year").orEmpty())
                 ?.value
@@ -842,6 +845,7 @@ internal object StreamCenterStremioAddonClient {
         return copy(
             posterUrl = posterUrl ?: fallback.posterUrl,
             backgroundUrl = backgroundUrl ?: fallback.backgroundUrl,
+            logoUrl = logoUrl ?: fallback.logoUrl,
             description = description ?: fallback.description,
             year = year ?: fallback.year,
             score = score ?: fallback.score,

@@ -87,6 +87,8 @@ internal data class AniZipEpisodeCatalog(
     val malId: Int? = null,
     val kitsuId: Int? = null,
     val tmdbId: Int? = null,
+    val imdbId: String? = null,
+    val logoUrl: String? = null,
 )
 
 internal data class TmdbAnimeEpisodeMetadata(

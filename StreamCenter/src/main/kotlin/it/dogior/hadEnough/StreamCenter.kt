@@ -134,6 +134,8 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import it.dogior.hadEnough.shared.PastebinDomainResolver
 import it.dogior.hadEnough.shared.PastebinSite
+import it.dogior.hadEnough.shared.AnimeTitleArtwork
+import it.dogior.hadEnough.shared.AnimeTitleLogoResolver
 import it.dogior.hadEnough.shared.StreamingCommunityMirrorCandidate
 import it.dogior.hadEnough.shared.StreamingCommunityMirrorResolver
 
@@ -2585,6 +2587,7 @@ class StreamCenter internal constructor(
             "titoli_alternativi" to listOf(metadataSource),
             "poster" to listOf(metadataSource),
             "sfondo" to listOf(metadataSource),
+            "logo" to listOf("Cinemeta", "AniZip"),
             "trama" to listOf(metadataSource),
             "tag" to listOf(metadataSource, "StreamCenter (etichette derivate)"),
             "anno" to listOf(metadataSource),
@@ -2597,7 +2600,7 @@ class StreamCenter internal constructor(
             "stato_trasmissione" to listOf(metadataSource),
             "prossimo_episodio" to listOf(metadataSource),
             "in_arrivo" to listOf(metadataSource),
-            "id_sincronizzazione" to trackingSources,
+            "id_sincronizzazione" to (trackingSources + listOf("AniZip", "IMDb")).distinct(),
             "stagioni" to listOf(metadataSource, "StreamCenter (normalizzazione stagioni)"),
             "episodi" to episodeSources,
             "episodi.nome" to episodeMetadataSources + "StreamCenter (fallback nome)",
@@ -3050,6 +3053,16 @@ class StreamCenter internal constructor(
             ?: throw IllegalStateException("Elemento del catalogo Stremio non disponibile")
         val type = stremioCatalogTvType(media.type)
             ?: throw IllegalArgumentException("Tipo Stremio non supportato")
+        val animeArtwork = if (type == TvType.Anime && media.logoUrl == null) {
+            resolveAnimeTitleArtwork(
+                anilistId = media.anilistId,
+                malId = media.malId,
+                isMovie = false,
+                knownImdbId = media.imdbId,
+            )
+        } else {
+            AnimeTitleArtwork(imdbId = media.imdbId, logoUrl = media.logoUrl)
+        }
         val stremioContext = StreamCenterStremioPlaybackContext(
             contentTypes = when (type) {
                 TvType.Movie -> listOf("movie")
@@ -3058,7 +3071,7 @@ class StreamCenter internal constructor(
                 else -> listOf("series")
             },
             stremioId = media.id,
-            imdbId = media.imdbId,
+            imdbId = animeArtwork.imdbId,
             tmdbId = media.tmdbId,
             anilistId = media.anilistId,
             malId = media.malId,
@@ -3095,6 +3108,7 @@ class StreamCenter internal constructor(
             apiName = this@StreamCenter.name
             posterUrl = media.posterUrl
             backgroundPosterUrl = media.backgroundUrl
+            logoUrl = media.logoUrl ?: animeArtwork.logoUrl
             plot = media.description
             tags = media.genres
             year = media.year
@@ -3102,7 +3116,7 @@ class StreamCenter internal constructor(
             addStreamCenterTrackingIds(
                 StreamCenterTrackingIds(
                     tmdb = media.tmdbId,
-                    imdb = media.imdbId,
+                    imdb = animeArtwork.imdbId,
                     anilist = media.anilistId,
                     mal = media.malId,
                     kitsu = media.kitsuId,
@@ -3157,7 +3171,8 @@ class StreamCenter internal constructor(
             defaultSource = addonSource,
             fieldSources = mapOf(
                 "tipo_contenuto" to listOf(addonSource, "StreamCenter (conversione tipo)"),
-                "id_sincronizzazione" to listOf(addonSource),
+                "logo" to listOf(addonSource, "Cinemeta", "AniZip"),
+                "id_sincronizzazione" to listOf(addonSource, "AniZip", "IMDb"),
                 "stagioni" to listOf(addonSource, "StreamCenter (raggruppamento episodi)"),
                 "episodi" to listOf(addonSource),
                 "episodi.dati_riproduzione" to playbackSources,
@@ -4830,8 +4845,15 @@ class StreamCenter internal constructor(
         val animeWorldSources = resolvedSources.animeWorldSources
         val animeSaturnSources = resolvedSources.animeSaturnSources
         val aniZipCatalog = resolvedSources.aniZipCatalog
+        val titleArtwork = resolveAnimeTitleArtwork(
+            anilistId = resolvedAnilistId,
+            malId = resolvedMalId,
+            isMovie = isMovie,
+            aniZipCatalog = aniZipCatalog,
+        )
         val stremioContext = StreamCenterStremioPlaybackContext(
             contentTypes = if (isMovie) listOf("movie", "anime") else listOf("series", "anime"),
+            imdbId = titleArtwork.imdbId,
             anilistId = resolvedAnilistId,
             malId = resolvedMalId,
             kitsuId = sourceSyncIds.firstOrNull()?.kitsuId,
@@ -4959,6 +4981,7 @@ class StreamCenter internal constructor(
                 if (!performanceMode) {
                     this.posterUrl = metadata.poster
                     this.backgroundPosterUrl = metadata.background
+                    this.logoUrl = titleArtwork.logoUrl
                     this.plot = resolvedPlot
                     this.tags = tags
                     this.year = metadata.year
@@ -4973,6 +4996,7 @@ class StreamCenter internal constructor(
                         mal = resolvedMalId,
                         kitsu = resolvedKitsuId,
                         simkl = resolvedSimklId,
+                        imdb = titleArtwork.imdbId,
                     ),
                     showAsTags = catalogDefinition == null && StreamCenterPlugin.shouldShowTrackingIds(sharedPref),
                 )
@@ -5061,6 +5085,7 @@ class StreamCenter internal constructor(
                 if (!performanceMode) {
                     this.posterUrl = metadata.poster
                     this.backgroundPosterUrl = metadata.background
+                    this.logoUrl = titleArtwork.logoUrl
                     this.plot = resolvedPlot
                     this.tags = tags
                     this.year = metadata.year
@@ -5091,6 +5116,7 @@ class StreamCenter internal constructor(
                         mal = resolvedMalId,
                         kitsu = resolvedKitsuId,
                         simkl = resolvedSimklId,
+                        imdb = titleArtwork.imdbId,
                     ),
                     showAsTags = catalogDefinition == null && StreamCenterPlugin.shouldShowTrackingIds(sharedPref),
                 )
@@ -5138,6 +5164,7 @@ class StreamCenter internal constructor(
                 "titoli_alternativi" to listOf("AniList", "AniZip"),
                 "poster" to listOf("AniList"),
                 "sfondo" to listOf("AniList"),
+                "logo" to listOf("Cinemeta", "AniZip"),
                 "trama" to listOf(plotSource),
                 "tag" to listOf("AniList"),
                 "anno" to listOf("AniList"),
@@ -5157,6 +5184,7 @@ class StreamCenter internal constructor(
                     "MyAnimeList",
                     "Kitsu",
                     "Simkl",
+                    "IMDb",
                 ),
                 "stagioni" to listOf(
                     "Fonti di riproduzione anime",
@@ -5239,8 +5267,15 @@ class StreamCenter internal constructor(
         val animeUnitySources = resolvedSources.animeUnitySources
         val animeWorldSources = resolvedSources.animeWorldSources
         val animeSaturnSources = resolvedSources.animeSaturnSources
+        val titleArtwork = resolveAnimeTitleArtwork(
+            anilistId = anilistId,
+            malId = malId,
+            isMovie = isMovie,
+            aniZipCatalog = resolvedSources.aniZipCatalog,
+        )
         val stremioContext = StreamCenterStremioPlaybackContext(
             contentTypes = if (isMovie) listOf("movie", "anime") else listOf("series", "anime"),
+            imdbId = titleArtwork.imdbId,
             anilistId = anilistId,
             malId = malId,
             kitsuId = kitsuId,
@@ -5315,6 +5350,7 @@ class StreamCenter internal constructor(
                 apiName = this@StreamCenter.name
                 posterUrl = metadata.poster
                 backgroundPosterUrl = metadata.background
+                logoUrl = titleArtwork.logoUrl
                 plot = metadata.description
                 this.tags = tags
                 year = metadata.year
@@ -5328,6 +5364,7 @@ class StreamCenter internal constructor(
                         anilist = anilistId,
                         mal = malId,
                         kitsu = kitsuId,
+                        imdb = titleArtwork.imdbId,
                     ),
                 )
                 metadata.trailerUrl?.let { addTrailer(it) }
@@ -5359,6 +5396,7 @@ class StreamCenter internal constructor(
                 apiName = this@StreamCenter.name
                 posterUrl = metadata.poster
                 backgroundPosterUrl = metadata.background
+                logoUrl = titleArtwork.logoUrl
                 plot = metadata.description
                 this.tags = tags
                 year = metadata.year
@@ -5392,6 +5430,7 @@ class StreamCenter internal constructor(
                         anilist = anilistId,
                         mal = malId,
                         kitsu = kitsuId,
+                        imdb = titleArtwork.imdbId,
                     ),
                 )
                 metadata.trailerUrl?.let { addTrailer(it) }
@@ -5467,8 +5506,15 @@ class StreamCenter internal constructor(
         val animeUnitySources = resolvedSources.animeUnitySources
         val animeWorldSources = resolvedSources.animeWorldSources
         val animeSaturnSources = resolvedSources.animeSaturnSources
+        val titleArtwork = resolveAnimeTitleArtwork(
+            anilistId = null,
+            malId = media.id,
+            isMovie = isMovie,
+            aniZipCatalog = resolvedSources.aniZipCatalog,
+        )
         val stremioContext = StreamCenterStremioPlaybackContext(
             contentTypes = if (isMovie) listOf("movie", "anime") else listOf("series", "anime"),
+            imdbId = titleArtwork.imdbId,
             malId = media.id,
             kitsuId = resolvedKitsuId,
         )
@@ -5520,6 +5566,7 @@ class StreamCenter internal constructor(
             ) {
                 apiName = this@StreamCenter.name
                 posterUrl = media.posterUrl
+                logoUrl = titleArtwork.logoUrl
                 plot = media.synopsis
                 this.tags = tags
                 year = media.year
@@ -5532,6 +5579,7 @@ class StreamCenter internal constructor(
                     StreamCenterTrackingIds(
                         mal = media.id,
                         kitsu = resolvedKitsuId,
+                        imdb = titleArtwork.imdbId,
                     ),
                 )
                 media.trailerUrl?.let { addTrailer(it) }
@@ -5564,6 +5612,7 @@ class StreamCenter internal constructor(
             ) {
                 apiName = this@StreamCenter.name
                 posterUrl = media.posterUrl
+                logoUrl = titleArtwork.logoUrl
                 plot = media.synopsis
                 this.tags = tags
                 year = media.year
@@ -5590,6 +5639,7 @@ class StreamCenter internal constructor(
                     StreamCenterTrackingIds(
                         mal = media.id,
                         kitsu = resolvedKitsuId,
+                        imdb = titleArtwork.imdbId,
                     ),
                 )
                 media.trailerUrl?.let { addTrailer(it) }
@@ -5667,8 +5717,15 @@ class StreamCenter internal constructor(
         val animeUnitySources = resolvedSources.animeUnitySources
         val animeWorldSources = resolvedSources.animeWorldSources
         val animeSaturnSources = resolvedSources.animeSaturnSources
+        val titleArtwork = resolveAnimeTitleArtwork(
+            anilistId = media.anilistId,
+            malId = media.malId,
+            isMovie = isMovie,
+            aniZipCatalog = resolvedSources.aniZipCatalog,
+        )
         val stremioContext = StreamCenterStremioPlaybackContext(
             contentTypes = if (isMovie) listOf("movie", "anime") else listOf("series", "anime"),
+            imdbId = titleArtwork.imdbId,
             anilistId = media.anilistId,
             malId = media.malId,
             kitsuId = media.id,
@@ -5721,6 +5778,7 @@ class StreamCenter internal constructor(
                 apiName = this@StreamCenter.name
                 posterUrl = media.posterUrl
                 backgroundPosterUrl = media.backgroundUrl
+                logoUrl = titleArtwork.logoUrl
                 plot = media.synopsis
                 this.tags = tags
                 year = media.year
@@ -5734,6 +5792,7 @@ class StreamCenter internal constructor(
                         anilist = media.anilistId,
                         mal = media.malId,
                         kitsu = media.id,
+                        imdb = titleArtwork.imdbId,
                     ),
                 )
                 media.trailerUrl?.let { addTrailer(it) }
@@ -5771,6 +5830,7 @@ class StreamCenter internal constructor(
                 apiName = this@StreamCenter.name
                 posterUrl = media.posterUrl
                 backgroundPosterUrl = media.backgroundUrl
+                logoUrl = titleArtwork.logoUrl
                 plot = media.synopsis
                 this.tags = tags
                 year = media.year
@@ -5798,6 +5858,7 @@ class StreamCenter internal constructor(
                         anilist = media.anilistId,
                         mal = media.malId,
                         kitsu = media.id,
+                        imdb = titleArtwork.imdbId,
                     ),
                 )
                 media.trailerUrl?.let { addTrailer(it) }
@@ -5885,6 +5946,17 @@ class StreamCenter internal constructor(
         } else {
             emptyMap()
         }
+        val titleArtwork = if (isAnime) {
+            resolveAnimeTitleArtwork(
+                anilistId = media.ids.anilist,
+                malId = media.ids.mal,
+                isMovie = isMovie,
+                knownImdbId = media.ids.imdb,
+                aniZipCatalog = resolvedSources.aniZipCatalog,
+            )
+        } else {
+            AnimeTitleArtwork(imdbId = media.ids.imdb)
+        }
         val stremioContext = StreamCenterStremioPlaybackContext(
             contentTypes = when {
                 isAnime && isMovie -> listOf("movie", "anime")
@@ -5892,7 +5964,7 @@ class StreamCenter internal constructor(
                 isMovie -> listOf("movie")
                 else -> listOf("series")
             },
-            imdbId = media.ids.imdb,
+            imdbId = titleArtwork.imdbId,
             tmdbId = media.ids.tmdb,
             anilistId = media.ids.anilist,
             malId = media.ids.mal,
@@ -5959,6 +6031,7 @@ class StreamCenter internal constructor(
                 apiName = this@StreamCenter.name
                 posterUrl = media.posterUrl
                 backgroundPosterUrl = media.backgroundUrl
+                logoUrl = titleArtwork.logoUrl
                 plot = media.plot
                 this.tags = tags
                 year = media.year
@@ -5967,7 +6040,7 @@ class StreamCenter internal constructor(
                 actors = media.actors
                 this.recommendations = recommendations
                 comingSoon = media.comingSoon
-                addStreamCenterTrackingIds(media.trackingIds())
+                addStreamCenterTrackingIds(media.trackingIds().copy(imdb = titleArtwork.imdbId))
                 media.trailerUrl?.let { addTrailer(it) }
                 addScore(media.score)
             }
@@ -6053,6 +6126,7 @@ class StreamCenter internal constructor(
                 apiName = this@StreamCenter.name
                 posterUrl = media.posterUrl
                 backgroundPosterUrl = media.backgroundUrl
+                logoUrl = titleArtwork.logoUrl
                 plot = media.plot
                 this.tags = tags
                 year = media.year
@@ -6069,7 +6143,7 @@ class StreamCenter internal constructor(
                 )
                 addEpisodes(DubStatus.Subbed, episodes)
                 addSeasonNames(buildAnimeSeasonData(episodes))
-                addStreamCenterTrackingIds(media.trackingIds())
+                addStreamCenterTrackingIds(media.trackingIds().copy(imdb = titleArtwork.imdbId))
                 media.trailerUrl?.let { addTrailer(it) }
                 addScore(media.score)
             }
@@ -6115,6 +6189,23 @@ class StreamCenter internal constructor(
                 ),
                 torrentContext = torrentContext,
             ),
+        )
+    }
+
+    private suspend fun resolveAnimeTitleArtwork(
+        anilistId: Int?,
+        malId: Int?,
+        isMovie: Boolean,
+        knownImdbId: String? = null,
+        aniZipCatalog: AniZipEpisodeCatalog = AniZipEpisodeCatalog(),
+    ): AnimeTitleArtwork {
+        if (performanceMode) return AnimeTitleArtwork(imdbId = knownImdbId ?: aniZipCatalog.imdbId)
+        return AnimeTitleLogoResolver.resolve(
+            anilistId = anilistId,
+            malId = malId,
+            isMovie = isMovie,
+            knownImdbId = knownImdbId ?: aniZipCatalog.imdbId,
+            fallbackLogoUrl = aniZipCatalog.logoUrl,
         )
     }
 

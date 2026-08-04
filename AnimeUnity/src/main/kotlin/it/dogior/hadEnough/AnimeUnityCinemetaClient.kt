@@ -7,6 +7,7 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
+import kotlinx.coroutines.CancellationException
 
 internal object AnimeUnityCinemetaClient {
     private data class Cached(val value: String?, val expiresAt: Long)
@@ -21,8 +22,13 @@ internal object AnimeUnityCinemetaClient {
         val type = if (isMovie) "movie" else "series"
         val result = candidates.firstNotNullOfOrNull { title ->
             val encoded = URLEncoder.encode(title, StandardCharsets.UTF_8.name()).replace("+", "%20")
-            val response = runCatching { app.get("https://v3-cinemeta.strem.io/catalog/$type/top/search=$encoded.json", timeout = 10L) }.getOrNull()
-                ?: return@firstNotNullOfOrNull null
+            val response = try {
+                app.get("https://v3-cinemeta.strem.io/catalog/$type/top/search=$encoded.json", timeout = 10L)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Throwable) {
+                return@firstNotNullOfOrNull null
+            }
             if (response.code !in 200..299) return@firstNotNullOfOrNull null
             selectImdbId(runCatching { JSONObject(response.text).optJSONArray("metas") }.getOrNull(), title, year, type)
         }
