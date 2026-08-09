@@ -394,7 +394,7 @@ open class AnimeWorldCore(
             engName = title
             japName = otherTitle
             addPoster(poster)
-            logoUrl = titleArtwork.logoUrl
+            logoUrl = titleArtwork.logoUrl.takeIf { trailerUrl.isNullOrBlank() }
             this.year = year
             addEpisodes(if (dub) DubStatus.Dubbed else DubStatus.Subbed, episodes)
             showStatus = status

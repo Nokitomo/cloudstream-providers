@@ -1254,7 +1254,7 @@ class AnimeUnity(
             else TvType.OVA,
         ) {
             this.posterUrl = getImage(primaryAnime.imageUrl, primaryAnime.anilistId)
-            this.logoUrl = titleArtwork.logoUrl
+            this.logoUrl = titleArtwork.logoUrl.takeIf { trailerUrl.isNullOrBlank() }
             primaryAnime.cover?.let { this.backgroundPosterUrl = getBanner(it) }
             this.year = primaryAnime.date.toIntOrNull()
             addScore(primaryAnime.score)
