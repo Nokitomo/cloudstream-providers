@@ -1,0 +1,327 @@
+[
+    {
+        "url": "https://raw.githubusercontent.com/Nokitomo/cloudstream-providers/builds/AltaDefinizione.cs3",
+        "status": 0,
+        "version": 8,
+        "name": "AltaDefinizione",
+        "internalName": "AltaDefinizione",
+        "authors": [
+            "Nokitomo"
+        ],
+        "description": "Movies and Tv Series from Altadefinizione",
+        "fileSize": 50880,
+        "repositoryUrl": "https://github.com/Nokitomo/cloudstream-providers",
+        "language": "it",
+        "tvTypes": [
+            "Movie",
+            "TvSeries",
+            "Documentary"
+        ],
+        "iconUrl": "https://altadefinizione.autos/templates/Dark/img/favicon.ico",
+        "apiVersion": 1,
+        "fileHash": "sha256-c6e48c03f98a7049860a0fcf417534a3b57f9254f17e702a9845119c8a9e1aaa"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/Nokitomo/cloudstream-providers/builds/AnimeUnity.cs3",
+        "status": 1,
+        "version": 27,
+        "name": "AnimeUnity",
+        "internalName": "AnimeUnity",
+        "authors": [
+            "Nokitomo"
+        ],
+        "description": "Anime from AnimeUnity",
+        "fileSize": 170598,
+        "repositoryUrl": "https://github.com/Nokitomo/cloudstream-providers",
+        "language": "it",
+        "tvTypes": [
+            "AnimeMovie",
+            "Anime",
+            "OVA"
+        ],
+        "iconUrl": "https://www.animeunity.so/apple-touch-icon.png",
+        "apiVersion": 1,
+        "fileHash": "sha256-3a228f9337a5bf53a1e112f60fa7a07a24b1a5721a3411744d4ac31c3ba18954"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/Nokitomo/cloudstream-providers/builds/AnimeWorld.cs3",
+        "status": 1,
+        "version": 19,
+        "name": "AnimeWorld",
+        "internalName": "AnimeWorld",
+        "authors": [
+            "Gian-Fr",
+            "Nokitomo"
+        ],
+        "description": "Anime from AnimeWorld. This plugin is a fork of the AnimeWorld plugin in the ItalianProvider repo",
+        "fileSize": 69953,
+        "repositoryUrl": "https://github.com/Nokitomo/cloudstream-providers",
+        "language": "it",
+        "tvTypes": [
+            "AnimeMovie",
+            "Anime",
+            "OVA"
+        ],
+        "iconUrl": "https://static.animeworld.ac/assets/images/favicon/android-icon-192x192.png?s",
+        "apiVersion": 1,
+        "fileHash": "sha256-cd079cccfde2c35b38199effda2b336602146d86ed17f61c95fe987fe85ad785"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/Nokitomo/cloudstream-providers/builds/Arte.cs3",
+        "status": 1,
+        "version": 4,
+        "name": "Arte",
+        "internalName": "Arte",
+        "authors": [
+            "Nokitomo"
+        ],
+        "description": "Magazine shows, concerts, documentaries, and more: the European culture channel's programmes available to stream free of charge on arte.tv",
+        "fileSize": 64131,
+        "repositoryUrl": "https://github.com/Nokitomo/cloudstream-providers",
+        "language": "en",
+        "tvTypes": [
+            "Documentary"
+        ],
+        "iconUrl": "https://static-cdn.arte.tv/replay/favicons/favicon-194x194.png",
+        "apiVersion": 1,
+        "fileHash": "sha256-c0b04dbf34a8ad190946d3ff4cc31a038589f63ae146d11a81e3655f9bfec9a9"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/Nokitomo/cloudstream-providers/builds/CalcioStreaming.cs3",
+        "status": 1,
+        "version": 10,
+        "name": "CalcioStreaming",
+        "internalName": "CalcioStreaming",
+        "authors": [
+            "Gian-Fr",
+            "Adippe",
+            "Nokitomo"
+        ],
+        "description": "\u26a0\ufe0fUse AdGuard DNS in the app settings\u26a0\ufe0f Live streams from the CalcioStreaming. Forked from the CalcioStreaming plugin in the ItalianProvider repo",
+        "fileSize": 44421,
+        "repositoryUrl": "https://github.com/Nokitomo/cloudstream-providers",
+        "language": "it",
+        "tvTypes": [
+            "Live"
+        ],
+        "iconUrl": "https://fig.direttecommunity.online/templates/calciostreaming1/images/icons/apple-touch-icon.png",
+        "apiVersion": 1,
+        "fileHash": "sha256-d8f94b983165cb0312e3b973e315fd037be3fac58f0f332cffe0317ad10accbc"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/Nokitomo/cloudstream-providers/builds/CorsaroNero.cs3",
+        "status": 0,
+        "version": 4,
+        "name": "CorsaroNero",
+        "internalName": "CorsaroNero",
+        "authors": [
+            "Nokitomo"
+        ],
+        "description": "Torrents from Il Corsaro Nero. If something doesn't work the torrent has probably not enough seeds",
+        "fileSize": 59798,
+        "repositoryUrl": "https://github.com/Nokitomo/cloudstream-providers",
+        "language": "it",
+        "tvTypes": [
+            "Movie",
+            "Torrent"
+        ],
+        "iconUrl": "https://ilcorsaronero.link/assets/images/icon-dca0f2c8f780ee155024c67b63f5ebc5.svg",
+        "apiVersion": 1,
+        "fileHash": "sha256-fc208234fad07b9d560a4b2f74936321c32a679b6ed7b84fb9155fec05943923"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/Nokitomo/cloudstream-providers/builds/IlCorsaroViola.cs3",
+        "status": 1,
+        "version": 1,
+        "name": "IlCorsaroViola",
+        "internalName": "IlCorsaroViola",
+        "authors": [
+            "Nokitomo"
+        ],
+        "description": "Torrents from Il Corsaro Viola",
+        "fileSize": 72216,
+        "repositoryUrl": "https://github.com/Nokitomo/cloudstream-providers",
+        "language": "it",
+        "tvTypes": [
+            "Movie",
+            "TvSeries",
+            "Torrent",
+            "Documentary"
+        ],
+        "iconUrl": "https://i.imgur.com/OPM9e9p.png",
+        "apiVersion": 1,
+        "fileHash": "sha256-904a46ed1c66fe9864854da1bd9a076293e30b55ff8fb4679c6078f09e17c61c"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/Nokitomo/cloudstream-providers/builds/IPTV.cs3",
+        "status": 1,
+        "version": 1,
+        "name": "IPTV",
+        "internalName": "IPTV",
+        "authors": [
+            "anhdaden",
+            "Nokitomo"
+        ],
+        "description": "General IPTV player. Add a list in the settings and you'll see it in the plugins list in the home",
+        "fileSize": 68177,
+        "repositoryUrl": "https://github.com/Nokitomo/cloudstream-providers",
+        "tvTypes": [
+            "Live"
+        ],
+        "iconUrl": "https://www.shutterstock.com/image-vector/iptv-vector-line-icon-ip-260nw-1841427610.jpg",
+        "apiVersion": 1,
+        "fileHash": "sha256-1407297e14d1055a4c9114c37d446a5980d2944ea6222d9978cbbaaeef5b31fe"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/Nokitomo/cloudstream-providers/builds/Nebula.cs3",
+        "status": 1,
+        "version": 1,
+        "name": "Nebula",
+        "internalName": "Nebula",
+        "authors": [
+            "Nokitomo"
+        ],
+        "description": "Plugin to watch the free videos and ONLY THE FREE VIDEOS from nebula.tv",
+        "fileSize": 52395,
+        "repositoryUrl": "https://github.com/Nokitomo/cloudstream-providers",
+        "language": "en",
+        "tvTypes": [
+            "Others"
+        ],
+        "iconUrl": "https://nebula.tv/apple-touch-icon.png",
+        "apiVersion": 1,
+        "fileHash": "sha256-d2e2ed81b31b1c9fc1c565b82dbade847b4101332483a7795c6ff990cf039ac2"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/Nokitomo/cloudstream-providers/builds/SimklProvider.cs3",
+        "status": 1,
+        "version": 2,
+        "name": "SimklProvider",
+        "internalName": "SimklProvider",
+        "authors": [
+            "Nokitomo"
+        ],
+        "description": "No Streaming. This is just to open the info page of a show from the simkl library",
+        "fileSize": 41311,
+        "repositoryUrl": "https://github.com/Nokitomo/cloudstream-providers",
+        "language": "en",
+        "tvTypes": [
+            "AnimeMovie",
+            "Anime",
+            "OVA",
+            "TvSeries",
+            "Movie",
+            "Documentary",
+            "Cartoon"
+        ],
+        "iconUrl": "https://eu.simkl.in/img_favicon/v2/favicon-192x192.png",
+        "apiVersion": 1,
+        "fileHash": "sha256-c95603285a56ad4820b5cfa0373692e78872ab02b7ad43951543b11b1cc04dac"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/Nokitomo/cloudstream-providers/builds/StreamCenter.cs3",
+        "status": 1,
+        "version": 9,
+        "name": "StreamCenter",
+        "internalName": "StreamCenter",
+        "authors": [
+            "Italiani"
+        ],
+        "description": "Film, Serie TV, Anime e TV in un unico posto.",
+        "fileSize": 1238967,
+        "repositoryUrl": "https://github.com/Nokitomo/cloudstream-providers",
+        "language": "it",
+        "tvTypes": [
+            "Movie",
+            "TvSeries",
+            "Anime",
+            "AnimeMovie",
+            "Live"
+        ],
+        "iconUrl": "https://raw.githubusercontent.com/Nokitomo/cloudstream-providers/master/StreamCenter/icon.png",
+        "apiVersion": 1,
+        "fileHash": "sha256-1576d5588ec3a62474a9e7da2e2b20b3e083b7d4668a5f7c724c5867dd8e79a1"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/Nokitomo/cloudstream-providers/builds/StreamingCommunity.cs3",
+        "status": 1,
+        "version": 34,
+        "name": "StreamingCommunity",
+        "internalName": "StreamingCommunity",
+        "authors": [
+            "Nokitomo"
+        ],
+        "description": "TV Shows and Movies from StreamingCommunity",
+        "fileSize": 103515,
+        "repositoryUrl": "https://github.com/Nokitomo/cloudstream-providers",
+        "language": "it",
+        "tvTypes": [
+            "TvSeries",
+            "Movie",
+            "Documentary",
+            "Cartoon"
+        ],
+        "iconUrl": "https://streamingunity.dog/apple-touch-icon.png?v=2",
+        "apiVersion": 1,
+        "fileHash": "sha256-28a0bd9538d5ed6a855417353ccc520e36e67debe921588ba154878a344abef7"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/Nokitomo/cloudstream-providers/builds/TV.cs3",
+        "status": 1,
+        "version": 3,
+        "name": "TV",
+        "internalName": "TV",
+        "authors": [
+            "Gian-Fr",
+            "Adippe",
+            "Nokitomo"
+        ],
+        "description": "Live streams from the Free TV github repository. Forked from the Free-TV plugin in the ItalianProvider repo",
+        "fileSize": 57102,
+        "repositoryUrl": "https://github.com/Nokitomo/cloudstream-providers",
+        "tvTypes": [
+            "Live"
+        ],
+        "iconUrl": "https://raw.githubusercontent.com/Nokitomo/cloudstream-providers/refs/heads/master/TV/television.png",
+        "apiVersion": 1,
+        "fileHash": "sha256-ad3efda5c1ad38fad442b9678f3e574d5a023f1eee19e67f95da9aec102735fd"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/Nokitomo/cloudstream-providers/builds/Vavoo.cs3",
+        "status": 1,
+        "version": 7,
+        "name": "Vavoo",
+        "internalName": "Vavoo",
+        "authors": [
+            "Nokitomo"
+        ],
+        "description": "\u26a0\ufe0f W.I.P. \u26a0\ufe0f TV channels from vavoo.to",
+        "fileSize": 64328,
+        "repositoryUrl": "https://github.com/Nokitomo/cloudstream-providers",
+        "tvTypes": [
+            "Live"
+        ],
+        "iconUrl": "https://vavoo.tv/favicon.ico",
+        "apiVersion": 1,
+        "fileHash": "sha256-7e7411f5f185a0533730a96a0ec54c9794b3270aa934b05be0177480b798be85"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/Nokitomo/cloudstream-providers/builds/YouTube.cs3",
+        "status": 1,
+        "version": 14,
+        "name": "YouTube",
+        "internalName": "YouTube",
+        "authors": [
+            "Nokitomo"
+        ],
+        "description": "Videos, playlists and channels from YouTube",
+        "fileSize": 68562,
+        "repositoryUrl": "https://github.com/Nokitomo/cloudstream-providers",
+        "tvTypes": [
+            "Others"
+        ],
+        "iconUrl": "https://www.youtube.com/s/desktop/711fd789/img/logos/favicon_144x144.png",
+        "apiVersion": 1,
+        "fileHash": "sha256-c52b513e00bfc6844d472dae8b6c38f2f9477afa11eb1490d56e81bbc07ed82b"
+    }
+]
