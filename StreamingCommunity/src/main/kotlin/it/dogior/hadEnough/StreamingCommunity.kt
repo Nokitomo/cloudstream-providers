@@ -495,7 +495,7 @@ class StreamingCommunity(
                 episodes
             ) {
                 this.posterUrl = poster
-                this.logoUrl = logo.takeIf { trailers.isNullOrEmpty() }
+                this.logoUrl = logo
                 title.getBackgroundImageId()
                     .let { this.backgroundPosterUrl = imageUrl(it) }
 
@@ -531,7 +531,7 @@ class StreamingCommunity(
                 dataUrl = data.toJson()
             ) {
                 this.posterUrl = poster
-                this.logoUrl = logo.takeIf { trailers.isNullOrEmpty() }
+                this.logoUrl = logo
                 title.getBackgroundImageId()
                     .let { this.backgroundPosterUrl = imageUrl(it) }
 

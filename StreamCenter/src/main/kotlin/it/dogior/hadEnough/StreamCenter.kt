@@ -3664,7 +3664,7 @@ class StreamCenter internal constructor(
                 if (!performanceMode || strictTmdbMetadata) {
                     this.posterUrl = poster
                     this.backgroundPosterUrl = background
-                    this.logoUrl = logo.takeIf { metadata.trailerUrl.isNullOrBlank() }
+                    this.logoUrl = logo
                     this.plot = plot
                     this.tags = tags
                     this.year = year
@@ -3716,7 +3716,7 @@ class StreamCenter internal constructor(
                 if (!performanceMode || strictTmdbMetadata) {
                     this.posterUrl = poster
                     this.backgroundPosterUrl = background
-                    this.logoUrl = logo.takeIf { metadata.trailerUrl.isNullOrBlank() }
+                    this.logoUrl = logo
                     this.plot = plot
                     this.tags = tags
                     this.year = year
@@ -4981,7 +4981,7 @@ class StreamCenter internal constructor(
                 if (!performanceMode) {
                     this.posterUrl = metadata.poster
                     this.backgroundPosterUrl = metadata.background
-                    this.logoUrl = titleArtwork.logoUrl.takeIf { metadata.trailerUrl.isNullOrBlank() }
+                    this.logoUrl = titleArtwork.logoUrl
                     this.plot = resolvedPlot
                     this.tags = tags
                     this.year = metadata.year
@@ -5085,7 +5085,7 @@ class StreamCenter internal constructor(
                 if (!performanceMode) {
                     this.posterUrl = metadata.poster
                     this.backgroundPosterUrl = metadata.background
-                    this.logoUrl = titleArtwork.logoUrl.takeIf { metadata.trailerUrl.isNullOrBlank() }
+                    this.logoUrl = titleArtwork.logoUrl
                     this.plot = resolvedPlot
                     this.tags = tags
                     this.year = metadata.year
@@ -5350,7 +5350,7 @@ class StreamCenter internal constructor(
                 apiName = this@StreamCenter.name
                 posterUrl = metadata.poster
                 backgroundPosterUrl = metadata.background
-                logoUrl = titleArtwork.logoUrl.takeIf { metadata.trailerUrl.isNullOrBlank() }
+                logoUrl = titleArtwork.logoUrl
                 plot = metadata.description
                 this.tags = tags
                 year = metadata.year
@@ -5396,7 +5396,7 @@ class StreamCenter internal constructor(
                 apiName = this@StreamCenter.name
                 posterUrl = metadata.poster
                 backgroundPosterUrl = metadata.background
-                logoUrl = titleArtwork.logoUrl.takeIf { metadata.trailerUrl.isNullOrBlank() }
+                logoUrl = titleArtwork.logoUrl
                 plot = metadata.description
                 this.tags = tags
                 year = metadata.year
@@ -5566,7 +5566,7 @@ class StreamCenter internal constructor(
             ) {
                 apiName = this@StreamCenter.name
                 posterUrl = media.posterUrl
-                logoUrl = titleArtwork.logoUrl.takeIf { media.trailerUrl.isNullOrBlank() }
+                logoUrl = titleArtwork.logoUrl
                 plot = media.synopsis
                 this.tags = tags
                 year = media.year
@@ -5612,7 +5612,7 @@ class StreamCenter internal constructor(
             ) {
                 apiName = this@StreamCenter.name
                 posterUrl = media.posterUrl
-                logoUrl = titleArtwork.logoUrl.takeIf { media.trailerUrl.isNullOrBlank() }
+                logoUrl = titleArtwork.logoUrl
                 plot = media.synopsis
                 this.tags = tags
                 year = media.year
@@ -5778,7 +5778,7 @@ class StreamCenter internal constructor(
                 apiName = this@StreamCenter.name
                 posterUrl = media.posterUrl
                 backgroundPosterUrl = media.backgroundUrl
-                logoUrl = titleArtwork.logoUrl.takeIf { media.trailerUrl.isNullOrBlank() }
+                logoUrl = titleArtwork.logoUrl
                 plot = media.synopsis
                 this.tags = tags
                 year = media.year
@@ -5830,7 +5830,7 @@ class StreamCenter internal constructor(
                 apiName = this@StreamCenter.name
                 posterUrl = media.posterUrl
                 backgroundPosterUrl = media.backgroundUrl
-                logoUrl = titleArtwork.logoUrl.takeIf { media.trailerUrl.isNullOrBlank() }
+                logoUrl = titleArtwork.logoUrl
                 plot = media.synopsis
                 this.tags = tags
                 year = media.year
@@ -6031,7 +6031,7 @@ class StreamCenter internal constructor(
                 apiName = this@StreamCenter.name
                 posterUrl = media.posterUrl
                 backgroundPosterUrl = media.backgroundUrl
-                logoUrl = titleArtwork.logoUrl.takeIf { media.trailerUrl.isNullOrBlank() }
+                logoUrl = titleArtwork.logoUrl
                 plot = media.plot
                 this.tags = tags
                 year = media.year
@@ -6126,7 +6126,7 @@ class StreamCenter internal constructor(
                 apiName = this@StreamCenter.name
                 posterUrl = media.posterUrl
                 backgroundPosterUrl = media.backgroundUrl
-                logoUrl = titleArtwork.logoUrl.takeIf { media.trailerUrl.isNullOrBlank() }
+                logoUrl = titleArtwork.logoUrl
                 plot = media.plot
                 this.tags = tags
                 year = media.year
