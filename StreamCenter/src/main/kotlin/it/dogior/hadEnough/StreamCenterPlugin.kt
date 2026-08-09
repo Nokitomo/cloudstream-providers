@@ -229,7 +229,7 @@ class StreamCenterPlugin : Plugin() {
         )
 
         internal const val FEEDBACK_ISSUES_URL =
-            "https://github.com/doGior/doGiorsHadEnough/issues/new"
+            "https://github.com/Nokitomo/cloudstream-providers/issues/new"
 
         val homeSections = listOf(
             StreamCenterHomeSectionDefinition(

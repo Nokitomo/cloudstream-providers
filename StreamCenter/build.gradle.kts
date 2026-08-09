@@ -45,7 +45,7 @@ cloudstream {
     requiresResources = true
     language = "it"
 
-    iconUrl = "https://raw.githubusercontent.com/doGior/doGiorsHadEnough/master/StreamCenter/icon.png"
+    iconUrl = "https://raw.githubusercontent.com/Nokitomo/cloudstream-providers/master/StreamCenter/icon.png"
 }
 
 android {

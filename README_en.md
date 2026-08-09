@@ -1,12 +1,12 @@
-# [doGior](https://github.com/doGior)'s Had Enough
+# [Nokitomo Cloudstream Providers](https://github.com/Nokitomo/cloudstream-providers)
 
-Hi, I'm doGior, and I've had enough of searching for Cloudstream plugins that end up broken or
+Hi, I'm Nokitomo, and I've had enough of searching for Cloudstream plugins that end up broken or
 abandoned, so I decided to create my own repository.
 
 ## Install
 
 Either click on the pizza to install or go to *Settings* -> *Extensions* -> *Add repository* and in
-the URL field type **doGior**
+the URL field type **Nokitomo/cloudstream-providers**
 <p align="center">
   <img alt="alt_text" width="200px" src="pizza.png"/>
 </p>
@@ -34,6 +34,6 @@ These are the plugins available at the moment:
 
 [All cloudstream repositories](https://rentry.org/cs3-repos)
 
-## Donations
+## Repository
 
-[Support me <3](https://buymeacoffee.com/dogior)
+[GitHub repository](https://github.com/Nokitomo/cloudstream-providers)

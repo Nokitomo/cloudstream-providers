@@ -6,7 +6,7 @@ cloudstream {
     // All of these properties are optional, you can safely remove them
 
     description = "Plugin to watch the free videos and ONLY THE FREE VIDEOS from nebula.tv"
-    authors = listOf("doGior")
+    authors = listOf("Nokitomo")
 
     /**
     * Status int as the following:

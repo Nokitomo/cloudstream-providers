@@ -6,7 +6,7 @@ cloudstream {
     // All of these properties are optional, you can safely remove them
 
     description = "Live TV from DaddyLive. You might need a VPN"
-    authors = listOf("doGior")
+    authors = listOf("Nokitomo")
 
     /**
     * Status int as the following:
@@ -21,7 +21,7 @@ cloudstream {
 
     requiresResources = false
 
-    iconUrl = "https://raw.githubusercontent.com/doGior/doGiorsHadEnough/refs/heads/master/DaddyLive/live-streaming.png"
+    iconUrl = "https://raw.githubusercontent.com/Nokitomo/cloudstream-providers/refs/heads/master/DaddyLive/live-streaming.png"
 }
 //dependencies{
 //    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.1")

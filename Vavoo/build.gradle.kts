@@ -6,7 +6,7 @@ cloudstream {
     // All of these properties are optional, you can safely remove them
 
     description = "⚠️ W.I.P. ⚠️ TV channels from vavoo.to"
-    authors = listOf("doGior")
+    authors = listOf("Nokitomo")
 
     /**
     * Status int as the following:

@@ -3,7 +3,7 @@ version = 14
 
 cloudstream {
     description = "Videos, playlists and channels from YouTube"
-    authors = listOf("doGior")
+    authors = listOf("Nokitomo")
 
     /**
      * Status int as the following:

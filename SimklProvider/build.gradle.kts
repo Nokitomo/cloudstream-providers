@@ -6,7 +6,7 @@ cloudstream {
     language = "en"
     // All of these properties are optional, you can safely remove them
 
-    authors = listOf("doGior")
+    authors = listOf("Nokitomo")
     description =
         "No Streaming. This is just to open the info page of a show from the simkl library"
 

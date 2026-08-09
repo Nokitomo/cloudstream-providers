@@ -1,13 +1,13 @@
-# [doGior](https://github.com/doGior)'s Had Enough
+# [Nokitomo Cloudstream Providers](https://github.com/Nokitomo/cloudstream-providers)
 
-[Read in english](https://github.com/doGior/doGiorsHadEnough/blob/master/README_en.md) <br><br>
-Ciao sono doGior e sono stanco di cercare plugin per Cloudstream che finiscono per non funzionare
+[Read in english](https://github.com/Nokitomo/cloudstream-providers/blob/master/README_en.md) <br><br>
+Ciao sono Nokitomo e sono stanco di cercare plugin per Cloudstream che finiscono per non funzionare
 ed essere abbandonati, quindi ho deciso di creare una mia repository.
 
 ## Installazione
 
 Clicca sulla pizza per installare la repo oppure vai in *Impostazioni* -> *Estensioni* -> *Aggiungi
-repository* e nel campo URL scrivi **doGior**
+repository* e nel campo URL scrivi **Nokitomo/cloudstream-providers**
 <p align="center">
   <img alt="alt_text" width="200px" src="pizza.png"/>
 </p>
@@ -33,5 +33,5 @@ Questi sono i plugin disponibili al momento
 
 [Tutte le repository per cloudstream](https://cloudstream.miraheze.org/wiki/List_of_extensions)
 
-## Donazioni
-[Supportami <3](https://buymeacoffee.com/dogior)
+## Repository
+[Repository GitHub](https://github.com/Nokitomo/cloudstream-providers)

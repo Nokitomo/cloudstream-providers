@@ -7,7 +7,7 @@ cloudstream {
     // All of these properties are optional, you can safely remove them
 
      description = "⚠️Use AdGuard DNS in the app settings⚠️ Live streams from the CalcioStreaming. Forked from the CalcioStreaming plugin in the ItalianProvider repo"
-    authors = listOf("Gian-Fr","Adippe","doGior")
+    authors = listOf("Gian-Fr","Adippe","Nokitomo")
 
     /**
      * Status int as the following:

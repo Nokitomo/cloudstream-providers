@@ -8,7 +8,7 @@ cloudstream {
     // All of these properties are optional, you can safely remove them
     description =
         "Torrents from Il Corsaro Viola"
-    authors = listOf("doGior")
+    authors = listOf("Nokitomo")
 
     /**
      * Status int as the following:

@@ -182,7 +182,7 @@ class AnimeUnitySettings : AnimeUnityBaseSettingsFragment() {
     private fun openFeedbackPage(titlePrefix: String) {
         val context = context ?: return
         val issuesUrl =
-            "https://github.com/doGior/doGiorsHadEnough/issues/new?title=${Uri.encode(titlePrefix)}"
+            "https://github.com/Nokitomo/cloudstream-providers/issues/new?title=${Uri.encode(titlePrefix)}"
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(issuesUrl))
 
         runCatching { startActivity(intent) }

@@ -43,7 +43,7 @@ class Vavoo(
 
     companion object {
         val posterUrl =
-            "https://raw.githubusercontent.com/doGior/doGiorsHadEnough/master/Vavoo/Vavoo.jpg"
+            "https://raw.githubusercontent.com/Nokitomo/cloudstream-providers/master/Vavoo/Vavoo.jpg"
         val resolveUA = "MediaHubMX/2"
         val authUA = "okhttp/4.11.0"
         var sign: AuthSign? = null
